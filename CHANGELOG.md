@@ -1,0 +1,130 @@
+# Changelog
+
+Toutes les modifications notables du projet LLM Cost Tracker seront documentées dans ce fichier.
+
+Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
+et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
+
+## [Non publié]
+
+### Phase de Design - 2025-12-22
+
+#### Ajouté
+- Document de design complet (`docs/plans/2025-12-22-openai-cost-tracker-design.md`)
+- README.md avec documentation complète du projet
+- CHANGELOG.md pour suivre les phases de développement
+- Structure du projet définie:
+  - **Architecture 4 couches** (Présentation / API / Providers / Services LLM)
+  - **Pattern Provider** pour extensibilité multi-services
+  - Stack technique: Next.js 14+ / TypeScript / Tailwind CSS
+  - Organisation des fichiers avec `/lib/providers/`
+  - Système de cache côté serveur (5 minutes) avec clés composées
+
+#### Décisions Techniques Majeures
+- **Architecture:** Pattern Provider avec interface `ILLMProvider` commune
+- **Multi-services:** Support extensible pour OpenAI, Anthropic, Mistral, etc.
+- **Navigation conditionnelle:** Workspace selector visible uniquement pour OpenAI
+- **Normalisation hybride:** Devises et dates normalisées, noms de modèles natifs
+- **Frontend:** Next.js avec App Router (pas Pages Router)
+- **Styling:** Tailwind CSS pour rapidité et modernité
+- **Sécurité:** Variables d'environnement Vercel, clés API server-side uniquement
+- **Cache:** En mémoire avec clés composées `${provider}_${workspace}_${project}_${dateRange}`
+
+#### Architecture Provider
+- Interface `ILLMProvider` définissant le contrat commun:
+  - `id`, `name`, `supportsWorkspaces`
+  - `getWorkspaces()`, `getProjects()`, `getCosts()`
+- Factory pattern pour instancier les providers
+- OpenAI comme premier provider (3 workspaces: Edugami, Memoways, Storygami)
+- Providers futurs: Anthropic, Mistral (architecture prête)
+
+#### Fonctionnalités Planifiées
+- **Sélection multi-niveaux:**
+  - Provider LLM (OpenAI, Anthropic, etc.)
+  - Workspace (conditionnel - uniquement OpenAI)
+  - Projet (dynamique selon provider/workspace)
+  - Période (boutons rapides + custom)
+- **Affichage des coûts:**
+  - Montant total en dollars (prominent)
+  - Breakdown détaillé par modèle avec noms natifs
+  - Cache indicator avec timestamp
+- **Système de refresh manuel** pour mise à jour des données
+
+---
+
+## Phases de Développement Prévues
+
+### [Phase 1] - Setup Initial & Architecture Providers (À venir)
+- [ ] Initialisation du projet Next.js avec TypeScript
+- [ ] Configuration Tailwind CSS
+- [ ] Création de la structure des dossiers avec `/lib/providers/`
+- [ ] Création de l'interface `ILLMProvider`
+- [ ] Implémentation du provider factory pattern
+- [ ] Configuration Git et .gitignore
+- [ ] Setup des variables d'environnement (.env.example)
+
+### [Phase 2] - OpenAI Provider & API Routes (À venir)
+- [ ] Implémentation complète `OpenAIProvider`
+  - [ ] Support des 3 workspaces (Edugami, Memoways, Storygami)
+  - [ ] Méthodes `getWorkspaces()`, `getProjects()`, `getCosts()`
+- [ ] Endpoint `/api/providers` (liste des providers disponibles)
+- [ ] Endpoint `/api/workspaces` (conditionnel par provider)
+- [ ] Endpoint `/api/projects` (avec support provider + workspace)
+- [ ] Endpoint `/api/costs` (avec support provider + workspace)
+- [ ] Système de cache avec clés composées
+- [ ] Gestion des erreurs et rate limiting
+- [ ] Tests des endpoints avec vraies clés API
+
+### [Phase 3] - Interface Utilisateur Multi-Provider (À venir)
+- [ ] Création du layout global et page principale
+- [ ] Composant `ProviderSelector`
+- [ ] Composant `WorkspaceSelector` (conditionnel)
+- [ ] Composant `ProjectSelector` avec états loading
+- [ ] Composant `DateRangePicker` (boutons + custom)
+- [ ] Composant `CostDisplay` (montant total)
+- [ ] Composant `ModelBreakdown` (tableau avec noms natifs)
+- [ ] Logique conditionnelle pour affichage workspace selector
+- [ ] Gestion des états: loading, erreurs, données vides
+- [ ] Bouton refresh et indicateur de cache
+
+### [Phase 4] - Tests et Déploiement (À venir)
+- [ ] Tests complets en local avec les 3 workspaces OpenAI
+- [ ] Validation de l'architecture extensible
+- [ ] Validation des calculs de coûts
+- [ ] Configuration du repository GitHub
+- [ ] Configuration Vercel et variables d'environnement
+- [ ] Premier déploiement en production
+- [ ] Vérification finale sur l'URL de production
+
+### [Phase 5] - Providers Additionnels (Future)
+- [ ] Implémentation `AnthropicProvider`
+  - [ ] Intégration Console API Anthropic
+  - [ ] Support workspaces Anthropic
+- [ ] Implémentation `MistralProvider`
+  - [ ] Intégration Platform API Mistral
+- [ ] Tests avec les nouveaux providers
+- [ ] Documentation pour ajouter de nouveaux providers
+- [ ] Guide de contribution
+
+---
+
+## Notes de Version
+
+### Conventions de Nommage
+- **[Non publié]** - Changements pas encore déployés
+- **[Phase N]** - Phase de développement en cours ou planifiée
+- **[X.Y.Z]** - Version déployée (après mise en production)
+
+### Catégories de Changements
+- **Ajouté** - Nouvelles fonctionnalités
+- **Modifié** - Changements aux fonctionnalités existantes
+- **Déprécié** - Fonctionnalités bientôt retirées
+- **Retiré** - Fonctionnalités retirées
+- **Corrigé** - Corrections de bugs
+- **Sécurité** - Corrections de vulnérabilités
+
+---
+
+## Historique (sera rempli au fur et à mesure)
+
+<!-- Les versions déployées seront ajoutées ici -->
