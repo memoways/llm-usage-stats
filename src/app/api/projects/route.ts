@@ -45,10 +45,17 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching projects:', error);
 
+    // Log full error details for debugging
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+
     return NextResponse.json(
       {
         error: 'Failed to fetch projects',
         message: error instanceof Error ? error.message : 'Unknown error',
+        details: error instanceof Error ? error.stack : undefined,
       },
       { status: 500 }
     );

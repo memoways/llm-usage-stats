@@ -48,8 +48,11 @@ export class OpenAIProvider implements ILLMProvider {
   ): Promise<Response> {
     const apiKey = this.getApiKey(workspace);
     const baseUrl = 'https://api.openai.com/v1';
+    const url = `${baseUrl}${endpoint}`;
 
-    const response = await fetch(`${baseUrl}${endpoint}`, {
+    console.log(`[OpenAI] Fetching: ${url} for workspace: ${workspace}`);
+
+    const response = await fetch(url, {
       ...options,
       headers: {
         'Authorization': `Bearer ${apiKey}`,
@@ -60,6 +63,7 @@ export class OpenAIProvider implements ILLMProvider {
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.error(`[OpenAI] API error (${response.status}):`, errorText);
       throw new Error(
         `OpenAI API error (${response.status}): ${errorText}`
       );
