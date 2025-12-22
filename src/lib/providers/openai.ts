@@ -157,10 +157,53 @@ export class OpenAIProvider implements ILLMProvider {
         project_id: projectId,
       });
 
-      const response = await this.fetchOpenAI(
-        `/usage?${queryParams.toString()}`,
-        workspace
-      );
+      // Try multiple endpoint variations as OpenAI API structure may vary
+      let response: Response | null = null;
+      let lastError: Error | null = null;
+      
+      const endpointsToTry = [
+        { path: `/usage?${queryParams.toString()}`, isAdmin: false, name: '/v1/usage' },
+        { path: `/usage?${queryParams.toString()}`, isAdmin: true, name: '/v1/organization/usage' },
+        { path: `/dashboard/billing/usage?${queryParams.toString()}`, isAdmin: false, name: '/v1/dashboard/billing/usage' },
+      ];
+
+      for (const endpoint of endpointsToTry) {
+        try {
+          console.log(`[OpenAI] Trying endpoint: ${endpoint.name}`);
+          response = await this.fetchOpenAI(
+            endpoint.path,
+            workspace,
+            {},
+            endpoint.isAdmin
+          );
+          
+          // If we get here, the request succeeded
+          break;
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error(String(error));
+          console.log(`[OpenAI] Endpoint ${endpoint.name} failed:`, lastError.message);
+          
+          // If it's a 404, try next endpoint
+          if (error instanceof Error && error.message.includes('404')) {
+            continue;
+          }
+          // For other errors (like 403), throw immediately
+          throw error;
+        }
+      }
+
+      // If all endpoints failed with 404, throw a helpful error
+      if (!response && lastError && lastError.message.includes('404')) {
+        throw new Error(
+          `OpenAI usage endpoint not found. The /v1/usage endpoint may not be available in the public API. ` +
+          `Please check OpenAI's API documentation or contact OpenAI support for the correct endpoint to retrieve usage/statistics data. ` +
+          `Tried endpoints: ${endpointsToTry.map(e => e.name).join(', ')}`
+        );
+      }
+
+      if (!response) {
+        throw lastError || new Error('Failed to fetch usage data from OpenAI');
+      }
 
       const data = await response.json();
 
