@@ -22,7 +22,7 @@ const cache = new Map<string, CacheEntry<unknown>>();
  *
  * @param provider - Provider ID (e.g., 'openai', 'anthropic')
  * @param workspace - Optional workspace ID
- * @param projectId - Project ID
+ * @param projectId - Optional project ID (omit for workspace-wide totals)
  * @param startDate - Start date (ISO format)
  * @param endDate - End date (ISO format)
  * @returns Composite cache key string
@@ -30,13 +30,14 @@ const cache = new Map<string, CacheEntry<unknown>>();
 export function generateCacheKey(
   provider: string,
   workspace: string | undefined,
-  projectId: string,
+  projectId: string | undefined,
   startDate: string,
   endDate: string
 ): string {
   const workspaceKey = workspace || 'none';
+  const projectKey = projectId || 'all-projects';
   const dateRange = `${startDate}_${endDate}`;
-  return `${provider}_${workspaceKey}_${projectId}_${dateRange}`;
+  return `${provider}_${workspaceKey}_${projectKey}_${dateRange}`;
 }
 
 /**

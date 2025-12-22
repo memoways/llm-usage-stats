@@ -5,7 +5,7 @@
  * Query params:
  * - provider: Provider ID (required)
  * - workspace: Workspace ID (optional, required if provider supports workspaces)
- * - project_id: Project ID (required)
+ * - project_id: Project ID (optional, omit for workspace-wide totals)
  * - start_date: Start date in ISO 8601 format (required)
  * - end_date: End date in ISO 8601 format (required)
  */
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const provider = searchParams.get('provider');
     const workspace = searchParams.get('workspace') || undefined;
-    const projectId = searchParams.get('project_id');
+    const projectId = searchParams.get('project_id') || undefined; // Optional: omit for workspace totals
     const startDate = searchParams.get('start_date');
     const endDate = searchParams.get('end_date');
 
@@ -27,13 +27,6 @@ export async function GET(request: NextRequest) {
     if (!provider) {
       return NextResponse.json(
         { error: 'Missing required parameter: provider' },
-        { status: 400 }
-      );
-    }
-
-    if (!projectId) {
-      return NextResponse.json(
-        { error: 'Missing required parameter: project_id' },
         { status: 400 }
       );
     }
@@ -81,14 +74,15 @@ export async function GET(request: NextRequest) {
       endDate
     );
 
+    // TEMPORARILY DISABLED: Cache to debug calculation issues
     // Try to get from cache
-    const cachedData = getFromCache(cacheKey);
-    if (cachedData) {
-      console.log(`Cache HIT for key: ${cacheKey}`);
-      return NextResponse.json(cachedData);
-    }
+    // const cachedData = getFromCache(cacheKey);
+    // if (cachedData) {
+    //   console.log(`Cache HIT for key: ${cacheKey}`);
+    //   return NextResponse.json(cachedData);
+    // }
 
-    console.log(`Cache MISS for key: ${cacheKey}`);
+    console.log(`Fetching fresh data (cache disabled for debugging), key: ${cacheKey}`);
 
     // Fetch fresh data from provider
     const costData = await providerInstance.getCosts({

@@ -104,10 +104,12 @@ export default function ProjectSelector({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={projects.length === 0}
-        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+        className="px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-gray-900 bg-white"
       >
         <option value="">
-          {projects.length === 0 ? 'No projects available' : 'Select a project...'}
+          {projects.length === 0 
+            ? (supportsWorkspaces && !workspaceId ? 'Select a workspace first' : 'No projects available') 
+            : 'Select a project...'}
         </option>
         {projects.map((project) => (
           <option key={project.id} value={project.id}>

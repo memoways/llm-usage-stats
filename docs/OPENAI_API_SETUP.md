@@ -14,7 +14,9 @@ This means your API key doesn't have the required permissions to read project an
 
 ## Solution: Create API Keys with Correct Permissions
 
-### Option 1: Project API Keys (Recommended)
+**IMPORTANT**: For usage/statistics endpoints, you need **Admin Keys**, not regular Project API Keys!
+
+### Option 1: Admin Keys (Required for Usage Endpoint)
 
 1. **Go to OpenAI Platform**:
    - Visit https://platform.openai.com/
@@ -22,44 +24,38 @@ This means your API key doesn't have the required permissions to read project an
 2. **Select Your Organization**:
    - Switch to the organization/workspace (Edugami, Memoways, or Storygami)
 
-3. **Go to API Keys**:
-   - Click on **Settings** (gear icon) → **API Keys**
-   - Or go directly to: https://platform.openai.com/api-keys
+3. **Go to Admin Keys** (NOT regular API Keys):
+   - Click on **Settings** (gear icon) → **Organization** → **Admin keys**
+   - Or go directly to: https://platform.openai.com/org-settings/admin-keys
 
-4. **Create New Secret Key**:
-   - Click **"+ Create new secret key"**
-   - Give it a descriptive name (e.g., "Cost Tracker - Edugami")
+4. **Create New Admin Key**:
+   - Click **"+ Create new admin key"** (or edit existing one)
+   - Give it a descriptive name (e.g., "Cost Tracker - Memoways")
 
 5. **Configure Permissions**:
    - Under **Permissions**, select:
-     - ✅ **All** (for full access)
-     - OR select specific scopes:
-       - ✅ **Model capabilities** (to read usage)
-       - ✅ **API access** (api.read scope)
+     - ✅ **All** (for full access including usage/statistics)
+   - **IMPORTANT**: Admin keys with "All" permissions include the `api.read` scope needed for usage endpoints
 
-6. **Set Resource Access**:
-   - **Recommended**: Select **All projects** for easier access
-   - **Alternative**: Select specific projects you want to track
-
-7. **Copy the Key**:
-   - Copy the API key (starts with `sk-proj-...`)
+6. **Copy the Key**:
+   - Copy the Admin API key (starts with `sk-...`)
    - **IMPORTANT**: Save it immediately - you won't be able to see it again!
 
-8. **Update `.env.local`**:
+7. **Update `.env.local`**:
    ```env
-   OPENAI_API_KEY_EDUGAMI=sk-proj-your-new-key-here
+   OPENAI_API_KEY_MEMOWAYS=sk-your-admin-key-here
    ```
 
-9. **Repeat for Other Workspaces**:
-   - Create separate keys for Memoways and Storygami
-   - Each workspace/organization needs its own key
+8. **Repeat for Other Workspaces**:
+   - Create separate Admin keys for Edugami, Memoways, and Storygami
+   - Each workspace/organization needs its own Admin key
 
-10. **Restart Dev Server**:
+9. **Restart Dev Server**:
     ```bash
     npm run dev
     ```
 
-### Option 2: Service Account Keys
+### Option 2: Project API Keys (For Projects Only)
 
 If you need organization-wide access:
 

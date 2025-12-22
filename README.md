@@ -6,11 +6,12 @@ Application web multi-services pour suivre et analyser les coûts de différents
 
 - 🌐 **Multi-services:** Architecture extensible supportant plusieurs providers LLM
 - 🏢 **Multi-workspaces:** Support des workspaces multiples (OpenAI: Edugami, Memoways, Storygami)
-- 📊 **Visualisation des coûts:** Coûts totaux par projet avec breakdown par modèle
-- 🔍 **Détails natifs:** Affichage des noms de modèles natifs de chaque service
+- 📊 **Workspace Total:** Vue des coûts globaux pour tous les projets d'un workspace
+- 💰 **Project Costs:** Coûts détaillés par projet avec breakdown par modèle
+- 🔍 **Model Breakdown:** Affichage des coûts par modèle (gpt-4o, gpt-4o-mini, etc.)
 - 📅 **Périodes flexibles:** Semaine, mois, année ou sélection custom
-- 🔄 **Cache intelligent:** Mise en cache côté serveur avec refresh manuel
-- 🔒 **Sécurité:** Clés API stockées côté serveur uniquement
+- 🔄 **Pagination complète:** Récupération de toutes les données même pour de longues périodes
+- 🔒 **Sécurité:** Clés API stockées côté serveur uniquement (.env gitignored)
 - 🔌 **Extensible:** Architecture provider permettant d'ajouter facilement de nouveaux services
 
 ## Services Supportés
@@ -307,7 +308,9 @@ Pour toute question ou problème, consulter:
 
 - [x] Architecture multi-provider extensible
 - [x] Support OpenAI (3 workspaces)
-- [ ] Implémentation complète OpenAI
+- [x] Implémentation complète OpenAI avec pagination
+- [x] Workspace Total (tous projets combinés)
+- [x] Model-level breakdown avec pricing
 - [ ] Support Anthropic
 - [ ] Support Mistral
 - [ ] Export des données (CSV, PDF)

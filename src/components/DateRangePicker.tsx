@@ -121,7 +121,7 @@ export default function DateRangePicker({
                 onStartDateChange(e.target.value);
                 handleCustomDateChange();
               }}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -136,7 +136,7 @@ export default function DateRangePicker({
                 onEndDateChange(e.target.value);
                 handleCustomDateChange();
               }}
-              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
             />
           </div>
         </div>

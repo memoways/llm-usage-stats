@@ -150,98 +150,287 @@ export class OpenAIProvider implements ILLMProvider {
     }
 
     try {
-      // Build query parameters for OpenAI usage API
-      const queryParams = new URLSearchParams({
-        start_date: startDate,
-        end_date: endDate,
-        project_id: projectId,
-      });
-
-      // Try multiple endpoint variations as OpenAI API structure may vary
-      let response: Response | null = null;
-      let lastError: Error | null = null;
+      // Convert dates to Unix timestamps (seconds) as required by OpenAI usage API
+      const startTimestamp = Math.floor(new Date(startDate).getTime() / 1000);
+      const endTimestamp = Math.floor(new Date(endDate).getTime() / 1000);
       
-      const endpointsToTry = [
-        { path: `/usage?${queryParams.toString()}`, isAdmin: false, name: '/v1/usage' },
-        { path: `/usage?${queryParams.toString()}`, isAdmin: true, name: '/v1/organization/usage' },
-        { path: `/dashboard/billing/usage?${queryParams.toString()}`, isAdmin: false, name: '/v1/dashboard/billing/usage' },
-      ];
+      const scope = projectId ? `project ${projectId}` : 'all projects (workspace total)';
+      console.log(`[OpenAI] Fetching usage for ${scope} from ${startDate} to ${endDate}`);
 
-      for (const endpoint of endpointsToTry) {
-        try {
-          console.log(`[OpenAI] Trying endpoint: ${endpoint.name}`);
-          response = await this.fetchOpenAI(
-            endpoint.path,
-            workspace,
-            {},
-            endpoint.isAdmin
-          );
+      // OpenAI API has a limit of 31 days per request with daily buckets
+      // For longer periods, we need to chunk into 31-day windows
+      const SECONDS_PER_DAY = 86400;
+      const MAX_DAYS_PER_REQUEST = 30; // Use 30 to be safe (API limit is 31)
+      const MAX_SECONDS_PER_REQUEST = MAX_DAYS_PER_REQUEST * SECONDS_PER_DAY;
+
+      // Generate time chunks
+      const timeChunks: { start: number; end: number }[] = [];
+      let chunkStart = startTimestamp;
+      while (chunkStart < endTimestamp) {
+        const chunkEnd = Math.min(chunkStart + MAX_SECONDS_PER_REQUEST, endTimestamp);
+        timeChunks.push({ start: chunkStart, end: chunkEnd });
+        chunkStart = chunkEnd;
+      }
+
+      console.log(`[OpenAI] Date range requires ${timeChunks.length} time chunk(s)`);
+
+      // Helper function to fetch ALL pages for a single time chunk
+      const fetchAllPagesForChunk = async (chunk: { start: number; end: number }): Promise<any[]> => {
+        const allChunkBuckets: any[] = [];
+        let nextPage: string | null = null;
+        let pageCount = 0;
+        const MAX_PAGES_PER_CHUNK = 50; // Safety limit
+        
+        do {
+          const queryParams = new URLSearchParams({
+            start_time: chunk.start.toString(),
+            end_time: chunk.end.toString(),
+            group_by: 'model', // Get model-level breakdown
+          });
           
-          // If we get here, the request succeeded
-          break;
-        } catch (error) {
-          lastError = error instanceof Error ? error : new Error(String(error));
-          console.log(`[OpenAI] Endpoint ${endpoint.name} failed:`, lastError.message);
-          
-          // If it's a 404, try next endpoint
-          if (error instanceof Error && error.message.includes('404')) {
-            continue;
+          // Only add project_ids if specified (omit for workspace-wide totals)
+          if (projectId) {
+            queryParams.set('project_ids', projectId);
           }
-          // For other errors (like 403), throw immediately
+          
+          // Add pagination token if we have one
+          if (nextPage) {
+            queryParams.set('page', nextPage);
+          }
+
+          let success = false;
+          for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+              const response = await this.fetchOpenAI(
+                `/usage/completions?${queryParams.toString()}`,
+                workspace,
+                {},
+                true // isAdminAPI
+              );
+
+              const data = await response.json();
+              
+              // Collect buckets from this page
+              if (data.data && Array.isArray(data.data)) {
+                allChunkBuckets.push(...data.data);
+              }
+              
+              // Check for more pages
+              nextPage = data.has_more ? data.next_page : null;
+              pageCount++;
+              success = true;
+              break;
+            } catch (error) {
+              const errorMsg = error instanceof Error ? error.message : String(error);
+              
+              if (errorMsg.includes('404')) {
+                throw new Error(`OpenAI usage endpoint not found.`);
+              } else if (errorMsg.includes('403')) {
+                throw new Error(`OpenAI API permission denied. Check API key scopes.`);
+              }
+              
+              // Retry on 503 or timeout errors
+              if (attempt < 3 && (errorMsg.includes('503') || errorMsg.includes('timeout'))) {
+                console.log(`[OpenAI] Page request failed (attempt ${attempt}/3), retrying in ${attempt * 2}s...`);
+                await new Promise(resolve => setTimeout(resolve, attempt * 2000));
+                continue;
+              }
+              throw error;
+            }
+          }
+          
+          if (!success) {
+            break;
+          }
+        } while (nextPage && pageCount < MAX_PAGES_PER_CHUNK);
+        
+        return allChunkBuckets;
+      };
+
+      // Fetch chunks SEQUENTIALLY to avoid overwhelming the API and hitting timeouts
+      // The API has pagination within each chunk, so parallel requests cause too many concurrent connections
+      const allBuckets: any[] = [];
+      
+      for (let i = 0; i < timeChunks.length; i++) {
+        const chunk = timeChunks[i];
+        const startStr = new Date(chunk.start * 1000).toISOString().split('T')[0];
+        const endStr = new Date(chunk.end * 1000).toISOString().split('T')[0];
+        console.log(`[OpenAI] Fetching chunk ${i + 1}/${timeChunks.length}: ${startStr} to ${endStr}`);
+        
+        try {
+          const chunkBuckets = await fetchAllPagesForChunk(chunk);
+          allBuckets.push(...chunkBuckets);
+          console.log(`[OpenAI] Chunk ${i + 1} returned ${chunkBuckets.length} buckets`);
+        } catch (error) {
+          // Log error but continue with other chunks
+          console.error(`[OpenAI] Chunk ${i + 1} failed:`, error instanceof Error ? error.message : error);
+          // Re-throw to stop processing - partial data would be confusing
           throw error;
         }
       }
 
-      // If all endpoints failed with 404, throw a helpful error
-      if (!response && lastError && lastError.message.includes('404')) {
-        throw new Error(
-          `OpenAI usage endpoint not found. The /v1/usage endpoint may not be available in the public API. ` +
-          `Please check OpenAI's API documentation or contact OpenAI support for the correct endpoint to retrieve usage/statistics data. ` +
-          `Tried endpoints: ${endpointsToTry.map(e => e.name).join(', ')}`
-        );
+      console.log(`[OpenAI] Fetched all ${timeChunks.length} chunks, collected ${allBuckets.length} total buckets`);
+      
+      // Debug: Log detailed bucket structure to understand the API response
+      if (allBuckets.length > 0) {
+        console.log(`[OpenAI] Sample bucket (first):`, JSON.stringify(allBuckets[0], null, 2));
+        console.log(`[OpenAI] Sample bucket (last):`, JSON.stringify(allBuckets[allBuckets.length - 1], null, 2));
+        console.log(`[OpenAI] All bucket keys:`, [...new Set(allBuckets.flatMap(b => Object.keys(b)))]);
       }
 
-      if (!response) {
-        throw lastError || new Error('Failed to fetch usage data from OpenAI');
-      }
+      // OpenAI Usage API returns buckets with results containing token counts
+      // We need to calculate costs from tokens using model-specific pricing
+      // Pricing per 1M tokens (as of late 2024):
+      const MODEL_PRICING: Record<string, { input: number; output: number }> = {
+        // GPT-4o
+        'gpt-4o': { input: 2.50, output: 10.00 },
+        'gpt-4o-2024-11-20': { input: 2.50, output: 10.00 },
+        'gpt-4o-2024-08-06': { input: 2.50, output: 10.00 },
+        'gpt-4o-2024-05-13': { input: 5.00, output: 15.00 },
+        // GPT-4o mini
+        'gpt-4o-mini': { input: 0.15, output: 0.60 },
+        'gpt-4o-mini-2024-07-18': { input: 0.15, output: 0.60 },
+        // GPT-4 Turbo
+        'gpt-4-turbo': { input: 10.00, output: 30.00 },
+        'gpt-4-turbo-preview': { input: 10.00, output: 30.00 },
+        'gpt-4-1106-preview': { input: 10.00, output: 30.00 },
+        // GPT-4
+        'gpt-4': { input: 30.00, output: 60.00 },
+        'gpt-4-0613': { input: 30.00, output: 60.00 },
+        // GPT-3.5 Turbo
+        'gpt-3.5-turbo': { input: 0.50, output: 1.50 },
+        'gpt-3.5-turbo-0125': { input: 0.50, output: 1.50 },
+        'gpt-3.5-turbo-1106': { input: 1.00, output: 2.00 },
+        // Embeddings
+        'text-embedding-3-small': { input: 0.02, output: 0 },
+        'text-embedding-3-large': { input: 0.13, output: 0 },
+        'text-embedding-ada-002': { input: 0.10, output: 0 },
+        // Default fallback
+        'default': { input: 2.50, output: 10.00 },
+      };
 
-      const data = await response.json();
-
-      // Parse OpenAI usage data format
-      // The actual format may vary - this is based on typical OpenAI API structure
-      // You may need to adjust this based on the actual API response
       const breakdown: ModelCost[] = [];
       let totalCost = 0;
+      let totalInputTokens = 0;
+      let totalOutputTokens = 0;
+      let totalRequests = 0;
 
-      if (data.data && Array.isArray(data.data)) {
-        // Group by model and sum costs
-        const modelMap = new Map<string, { cost: number; requests: number }>();
+      // Group by model and sum tokens/requests
+      const modelMap = new Map<string, { 
+        inputTokens: number; 
+        outputTokens: number; 
+        requests: number;
+      }>();
 
-        for (const entry of data.data) {
-          const model = entry.snapshot_id || entry.model || 'unknown';
-          const cost = entry.cost || 0;
-          const requests = entry.n_requests || 1;
+      // Parse all collected buckets from pagination
+      let bucketsWithResults = 0;
+      let bucketsWithoutResults = 0;
+      let totalResultsProcessed = 0;
+      
+      for (const bucket of allBuckets) {
+        // Check multiple possible data structures
+        // Structure 1: bucket.results[] array (original expected)
+        // Structure 2: bucket itself contains the fields directly
+        // Structure 3: bucket is the result object
+        
+        if (bucket.results && Array.isArray(bucket.results)) {
+          bucketsWithResults++;
+          for (const result of bucket.results) {
+            const model = result.model || 'unknown';
+            const inputTokens = result.input_tokens || 0;
+            const outputTokens = result.output_tokens || 0;
+            const requests = result.num_model_requests || 0;
+
+            totalInputTokens += inputTokens;
+            totalOutputTokens += outputTokens;
+            totalRequests += requests;
+            totalResultsProcessed++;
+
+            const existing = modelMap.get(model);
+            if (existing) {
+              existing.inputTokens += inputTokens;
+              existing.outputTokens += outputTokens;
+              existing.requests += requests;
+            } else {
+              modelMap.set(model, { inputTokens, outputTokens, requests });
+            }
+          }
+        } else if (bucket.input_tokens !== undefined || bucket.output_tokens !== undefined) {
+          // Direct structure - bucket IS the result
+          bucketsWithResults++;
+          const model = bucket.model || 'unknown';
+          const inputTokens = bucket.input_tokens || 0;
+          const outputTokens = bucket.output_tokens || 0;
+          const requests = bucket.num_model_requests || 0;
+
+          totalInputTokens += inputTokens;
+          totalOutputTokens += outputTokens;
+          totalRequests += requests;
+          totalResultsProcessed++;
 
           const existing = modelMap.get(model);
           if (existing) {
-            existing.cost += cost;
+            existing.inputTokens += inputTokens;
+            existing.outputTokens += outputTokens;
             existing.requests += requests;
           } else {
-            modelMap.set(model, { cost, requests });
+            modelMap.set(model, { inputTokens, outputTokens, requests });
           }
-
-          totalCost += cost;
-        }
-
-        // Convert map to array
-        for (const [model, { cost, requests }] of modelMap.entries()) {
-          breakdown.push({
-            model,
-            cost_usd: cost,
-            requests,
-          });
+        } else {
+          bucketsWithoutResults++;
         }
       }
+      
+      console.log(`[OpenAI] Parsed ${bucketsWithResults} buckets with data, ${bucketsWithoutResults} empty, ${totalResultsProcessed} total results`);
+      console.log(`[OpenAI] Models found:`, [...modelMap.keys()]);
+
+      // Calculate costs for each model using model-specific pricing
+      for (const [model, { inputTokens, outputTokens, requests }] of modelMap.entries()) {
+        // Find the best matching pricing (try exact match, then prefix match, then default)
+        let pricing = MODEL_PRICING[model];
+        if (!pricing) {
+          // Try to find a prefix match (e.g., 'gpt-4o-2024-11-20' matches 'gpt-4o')
+          const modelPrefix = Object.keys(MODEL_PRICING).find(key => 
+            model.startsWith(key) || key.startsWith(model.split('-').slice(0, 2).join('-'))
+          );
+          pricing = modelPrefix ? MODEL_PRICING[modelPrefix] : MODEL_PRICING['default'];
+        }
+
+        const inputCost = (inputTokens / 1_000_000) * pricing.input;
+        const outputCost = (outputTokens / 1_000_000) * pricing.output;
+        const modelCost = inputCost + outputCost;
+
+        // Create a readable model name
+        let displayName = model;
+        if (model === 'unknown' || model === null) {
+          displayName = 'Unknown Model';
+        }
+
+        breakdown.push({
+          model: displayName,
+          cost_usd: modelCost,
+          requests,
+        });
+
+        totalCost += modelCost;
+      }
+
+      // If no breakdown but we have totals, create a summary entry
+      if (breakdown.length === 0 && (totalInputTokens > 0 || totalOutputTokens > 0)) {
+        const defaultPricing = MODEL_PRICING['default'];
+        const inputCost = (totalInputTokens / 1_000_000) * defaultPricing.input;
+        const outputCost = (totalOutputTokens / 1_000_000) * defaultPricing.output;
+        totalCost = inputCost + outputCost;
+        
+        breakdown.push({
+          model: 'All Models (aggregated)',
+          cost_usd: totalCost,
+          requests: totalRequests,
+        });
+      }
+
+      // Log the calculated totals
+      console.log(`[OpenAI] Calculated: ${totalInputTokens.toLocaleString()} input tokens, ${totalOutputTokens.toLocaleString()} output tokens, ${totalRequests.toLocaleString()} requests, $${totalCost.toFixed(2)} total cost`);
 
       // Sort breakdown by cost (descending)
       breakdown.sort((a, b) => b.cost_usd - a.cost_usd);

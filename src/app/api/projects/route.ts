@@ -28,13 +28,12 @@ export async function GET(request: NextRequest) {
     const providerInstance = getProvider(provider);
 
     // Check if workspace is required for this provider
+    // Return empty list instead of error to handle race conditions in UI
     if (providerInstance.supportsWorkspaces && !workspace) {
-      return NextResponse.json(
-        {
-          error: `Provider '${provider}' requires a workspace parameter`,
-        },
-        { status: 400 }
-      );
+      return NextResponse.json({
+        projects: [],
+        message: 'Please select a workspace first',
+      });
     }
 
     const projects = await providerInstance.getProjects(workspace);

@@ -7,6 +7,35 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+### Améliorations Majeures - 2025-12-22
+
+#### Ajouté
+- **Workspace Total (All Projects):**
+  - Nouvelle section pour voir les coûts de TOUS les projets d'un workspace
+  - Boutons rapides: Last Week, Last Month, Last Year
+  - Date picker custom avec style amélioré
+  - Breakdown par modèle pour le workspace entier
+
+- **Model-Level Breakdown:**
+  - Utilisation du paramètre `group_by=model` de l'API OpenAI
+  - Affichage des vrais noms de modèles (gpt-4o, gpt-4o-mini, etc.)
+  - Pricing spécifique par modèle pour calcul précis des coûts
+
+- **Pagination Complète:**
+  - Gestion de la pagination au sein de chaque chunk temporel
+  - Récupération de TOUTES les données même pour de longues périodes
+  - Requêtes séquentielles pour éviter les timeouts API
+
+- **Chunking pour Longues Périodes:**
+  - L'API OpenAI limite à 31 jours par requête
+  - Découpage automatique en chunks de 30 jours
+  - Agrégation correcte des résultats de tous les chunks
+
+#### Corrigé
+- Calculs incorrects pour "Last Year" (données manquantes dues à pagination incomplète)
+- Couleur du texte dans les date pickers (maintenant noir sur fond blanc)
+- Gestion des erreurs 503/timeout avec retry automatique
+
 ### Phase d'Implémentation Complète - 2025-12-22
 
 #### Ajouté
