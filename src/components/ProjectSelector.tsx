@@ -15,6 +15,7 @@ interface ProjectSelectorProps {
   workspaceId?: string;
   value: string;
   onChange: (projectId: string) => void;
+  supportsWorkspaces?: boolean;
 }
 
 export default function ProjectSelector({
@@ -22,6 +23,7 @@ export default function ProjectSelector({
   workspaceId,
   value,
   onChange,
+  supportsWorkspaces = false,
 }: ProjectSelectorProps) {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
@@ -29,6 +31,13 @@ export default function ProjectSelector({
 
   useEffect(() => {
     if (!providerId) {
+      return;
+    }
+
+    // If provider supports workspaces, wait for workspace to be selected
+    if (supportsWorkspaces && !workspaceId) {
+      setProjects([]);
+      setError(null);
       return;
     }
 
@@ -63,7 +72,7 @@ export default function ProjectSelector({
     }
 
     fetchProjects();
-  }, [providerId, workspaceId]);
+  }, [providerId, workspaceId, supportsWorkspaces]);
 
   if (loading) {
     return (

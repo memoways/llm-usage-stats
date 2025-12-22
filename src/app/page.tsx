@@ -168,6 +168,7 @@ export default function Home() {
                 setProjectId(id);
                 setCostData(null); // Clear results
               }}
+              supportsWorkspaces={supportsWorkspaces}
             />
           </div>
 
