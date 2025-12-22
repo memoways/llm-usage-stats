@@ -70,6 +70,16 @@ export class OpenAIProvider implements ILLMProvider {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`[OpenAI] API error (${response.status}):`, errorText);
+
+      // Provide helpful error messages for common issues
+      if (response.status === 403) {
+        throw new Error(
+          `OpenAI API permission denied (403). The API key needs specific permissions/scopes enabled. ` +
+          `Please check your API key has 'api.read' scope in the OpenAI dashboard. ` +
+          `Error details: ${errorText}`
+        );
+      }
+
       throw new Error(
         `OpenAI API error (${response.status}): ${errorText}`
       );
