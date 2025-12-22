@@ -87,7 +87,7 @@ export class OpenAIProvider implements ILLMProvider {
 
     try {
       const response = await this.fetchOpenAI(
-        '/organization/projects',
+        '/projects',
         workspace
       );
 
