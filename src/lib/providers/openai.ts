@@ -44,13 +44,19 @@ export class OpenAIProvider implements ILLMProvider {
   private async fetchOpenAI(
     endpoint: string,
     workspace: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    isAdminAPI: boolean = false
   ): Promise<Response> {
     const apiKey = this.getApiKey(workspace);
-    const baseUrl = 'https://api.openai.com/v1';
+
+    // Admin API uses a different base URL
+    const baseUrl = isAdminAPI
+      ? 'https://api.openai.com/v1/organization'
+      : 'https://api.openai.com/v1';
+
     const url = `${baseUrl}${endpoint}`;
 
-    console.log(`[OpenAI] Fetching: ${url} for workspace: ${workspace}`);
+    console.log(`[OpenAI] Fetching: ${url} for workspace: ${workspace} (Admin: ${isAdminAPI})`);
 
     const response = await fetch(url, {
       ...options,
@@ -90,16 +96,22 @@ export class OpenAIProvider implements ILLMProvider {
     }
 
     try {
+      // Use admin API to fetch projects
       const response = await this.fetchOpenAI(
         '/projects',
-        workspace
+        workspace,
+        {},
+        true // isAdminAPI = true
       );
 
       const data = await response.json();
 
+      console.log('[OpenAI] Projects response:', JSON.stringify(data, null, 2));
+
       // OpenAI API returns projects in a 'data' array
       // Each project has an 'id' and 'name' field
       if (!data.data || !Array.isArray(data.data)) {
+        console.error('[OpenAI] Unexpected response format:', data);
         throw new Error('Invalid response format from OpenAI projects API');
       }
 
