@@ -1,12 +1,13 @@
 /**
  * OpenAIProvider - Implementation of ILLMProvider for OpenAI
  *
- * This provider supports 3 separate workspaces:
- * - Edugami
- * - Memoways
- * - Storygami
+ * This provider supports multiple workspaces, detected dynamically from environment variables.
+ * Each workspace has its own API key stored in environment variables with pattern:
+ *   OPENAI_API_KEY_<WORKSPACE_NAME>=sk-admin-xxx...
  *
- * Each workspace has its own API key stored in environment variables.
+ * Example:
+ *   OPENAI_API_KEY_PRODUCTION=sk-admin-xxx...
+ *   OPENAI_API_KEY_DEVELOPMENT=sk-admin-xxx...
  */
 
 import { ILLMProvider } from './interface';
@@ -17,12 +18,30 @@ export class OpenAIProvider implements ILLMProvider {
   public readonly name = 'OpenAI';
   public readonly supportsWorkspaces = true;
 
-  // Workspace configurations
-  private readonly workspaces: Workspace[] = [
-    { id: 'edugami', name: 'Edugami' },
-    { id: 'memoways', name: 'Memoways' },
-    { id: 'storygami', name: 'Storygami' },
-  ];
+  // Workspace configurations - detected dynamically from environment variables
+  private readonly workspaces: Workspace[] = [];
+
+  constructor() {
+    // Dynamically detect workspaces from environment variables
+    // Looking for OPENAI_API_KEY_<WORKSPACE_NAME> pattern
+    const envKeys = Object.keys(process.env);
+    const workspacePattern = /^OPENAI_API_KEY_(\w+)$/;
+    
+    for (const key of envKeys) {
+      const match = key.match(workspacePattern);
+      if (match && process.env[key]) {
+        const workspaceId = match[1].toLowerCase();
+        // Convert to title case for display name
+        const workspaceName = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
+        this.workspaces.push({ id: workspaceId, name: workspaceName });
+      }
+    }
+
+    // Sort workspaces alphabetically
+    this.workspaces.sort((a, b) => a.name.localeCompare(b.name));
+
+    console.log(`[OpenAI] Detected ${this.workspaces.length} workspace(s):`, this.workspaces.map(w => w.name).join(', '));
+  }
 
   /**
    * Get API key for a specific workspace

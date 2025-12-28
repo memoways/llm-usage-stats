@@ -2,13 +2,27 @@
 
 Application web multi-services pour suivre et analyser les coûts de différents fournisseurs LLM (OpenAI, Anthropic, Mistral, etc.) par projet et par période.
 
+## 🎯 Pourquoi cette application ?
+
+**Le problème:** La console d'administration d'OpenAI ne permet pas de sélectionner des dates spécifiques pour visualiser les coûts. On ne peut voir que les données **mois par mois**, sans possibilité de consulter facilement :
+- Les coûts sur une période personnalisée (ex: du 15 janvier au 28 février)
+- Le total sur plusieurs mois
+- Les coûts sur une année entière
+- Une comparaison entre différentes périodes
+
+**La solution:** Cette application a été développée par **Ulrich Fischer** pour pallier ces limitations et offrir :
+- ✅ Sélection de dates personnalisées (n'importe quelle période)
+- ✅ Vue des coûts sur plusieurs mois/années
+- ✅ Support de plusieurs providers LLM (OpenAI, Anthropic, etc.)
+- ✅ Breakdown détaillé par modèle avec calcul des coûts réels
+
 ## Features
 
 - 🌐 **Multi-services:** Architecture extensible supportant plusieurs providers LLM
-- 🏢 **Multi-workspaces:** Support des workspaces multiples (OpenAI: Edugami, Memoways, Storygami)
+- 🏢 **Multi-workspaces:** Support des workspaces multiples par provider
 - 📊 **Workspace Total:** Vue des coûts globaux pour tous les projets d'un workspace
 - 💰 **Project Costs:** Coûts détaillés par projet avec breakdown par modèle
-- 🔍 **Model Breakdown:** Affichage des coûts par modèle (gpt-4o, gpt-4o-mini, etc.)
+- 🔍 **Model Breakdown:** Affichage des coûts par modèle (gpt-4o, gpt-4o-mini, claude-3-5-sonnet, etc.)
 - 📅 **Périodes flexibles:** Semaine, mois, année ou sélection custom
 - 🔄 **Pagination complète:** Récupération de toutes les données même pour de longues périodes
 - 🔒 **Sécurité:** Clés API stockées côté serveur uniquement (.env gitignored)
@@ -17,38 +31,37 @@ Application web multi-services pour suivre et analyser les coûts de différents
 ## Services Supportés
 
 ### Actuellement Implémentés
-- ✅ **OpenAI** - 3 workspaces séparés (Edugami, Memoways, Storygami)
-- ✅ **Anthropic** - Multiple workspaces with API keys as "projects"
+- ✅ **OpenAI** - Support multi-workspaces avec projets
+- ✅ **Anthropic** - Support multi-workspaces avec API keys
 
 ### À Venir
 - ⏳ **Mistral** - Platform API
 - ⏳ **Autres services LLM**
 
-## ⚠️ Important: Provider Structure Differences
+## ⚠️ Important: Différences entre Providers
 
 ### OpenAI
 ```
 Organization
-└── Workspace (e.g., Edugami, Memoways, Storygami)
-    └── Projects (e.g., "My App", "Internal Tools")
+└── Workspace
+    └── Projects
         └── API Keys (multiple per project)
 ```
-- **Projects** are the billing unit
-- **Workspace Total** = sum of costs across all **projects**
+- **Projects** = unité de facturation
+- Les données d'usage sont disponibles via l'API ✅
+- **Workspace Total** = somme des coûts de tous les projets
 
 ### Anthropic
 ```
 Organization
-└── Workspaces (e.g., Default, Memoways projects, Claude Code)
-    └── API Keys (listed as "Projects" in this app)
+└── Workspaces
+    └── API Keys (affichées comme "Projects" dans cette app)
 ```
-- **Workspaces** are the billing unit (no projects concept)
-- **API Keys** are displayed in the "Project" dropdown for per-key cost tracking
-- **Workspace Total** = total cost for the **entire workspace**
+- **Workspaces** = unité de facturation (pas de concept de projet)
+- Les **API Keys** sont listées dans le dropdown "Project"
+- **Workspace Total** = coût total pour le workspace entier
 
-⚠️ **LIMITATION (as of December 2024):** Anthropic does NOT expose usage/billing data via their API. The Admin API only provides workspace, API keys, members, and invites management. **Usage data must be checked manually** at: https://console.anthropic.com/settings/billing
-
-This distinction affects how the "Workspace Total" calculation works for each provider.
+⚠️ **LIMITATION (décembre 2024):** Anthropic ne fournit PAS de données d'usage/facturation via leur API. L'Admin API permet uniquement la gestion des workspaces, API keys, membres et invitations. **Les données d'usage doivent être consultées manuellement** sur : https://console.anthropic.com/settings/billing
 
 ## Stack Technique
 
@@ -68,7 +81,7 @@ llm-cost-tracker/
 │   │   ├── layout.tsx          # Layout global
 │   │   └── api/                # API endpoints
 │   │       ├── providers/      # Liste des providers
-│   │       ├── workspaces/     # Liste des workspaces (conditionnel)
+│   │       ├── workspaces/     # Liste des workspaces
 │   │       ├── projects/       # Liste des projets
 │   │       └── costs/          # Données de coûts
 │   ├── components/             # Composants React
@@ -82,15 +95,12 @@ llm-cost-tracker/
 │   │   ├── providers/         # Providers LLM
 │   │   │   ├── interface.ts   # Interface ILLMProvider
 │   │   │   ├── openai.ts      # OpenAIProvider
-│   │   │   ├── anthropic.ts   # AnthropicProvider (future)
-│   │   │   ├── mistral.ts     # MistralProvider (future)
+│   │   │   ├── anthropic.ts   # AnthropicProvider
 │   │   │   └── factory.ts     # Provider factory
 │   │   └── types.ts           # Types TypeScript communs
 │   └── utils/                  # Utilitaires
 │       └── cache.ts           # Système de cache
-├── docs/                       # Documentation
-│   └── plans/                 # Documents de design
-├── .env.local                 # Variables d'environnement (local)
+├── .env.local                 # Variables d'environnement (local, gitignored)
 ├── .env.example              # Template des variables
 └── README.md
 ```
@@ -105,9 +115,10 @@ llm-cost-tracker/
 
 ### Setup Initial
 
-1. **Cloner ou initialiser le projet:**
+1. **Cloner le repository:**
    ```bash
-   cd "/Users/ulrich/Code projects/OpenAI Cost"
+   git clone <repository-url>
+   cd llm-cost-tracker
    ```
 
 2. **Installer les dépendances:**
@@ -122,17 +133,16 @@ llm-cost-tracker/
 
    Éditer `.env.local` et ajouter vos clés API:
    ```env
-   # OpenAI (3 workspaces séparés - Admin API keys with usage permissions)
-   OPENAI_API_KEY_EDUGAMI=sk-proj-your-key-here
-   OPENAI_API_KEY_MEMOWAYS=sk-proj-your-key-here
-   OPENAI_API_KEY_STORYGAMI=sk-proj-your-key-here
+   # OpenAI - Une clé Admin API par workspace
+   # Créer des clés avec permissions "Usage" sur: https://platform.openai.com/api-keys
+   OPENAI_API_KEY_WORKSPACE1=sk-admin-your-key-here
+   OPENAI_API_KEY_WORKSPACE2=sk-admin-your-key-here
 
-   # Anthropic (Single Admin API key for all workspaces)
-   # Create Admin API key at: https://console.anthropic.com/settings/admin-keys
-   # This key accesses ALL workspaces dynamically - no per-workspace config needed!
+   # Anthropic - Une seule Admin API key pour tous les workspaces
+   # Créer une clé Admin sur: https://console.anthropic.com/settings/admin-keys
    ANTHROPIC_ADMIN_KEY=sk-ant-admin-your-key-here
 
-   # Autres services (optionnel pour l'instant)
+   # Autres services (optionnel)
    # MISTRAL_API_KEY=your-key-here
    ```
 
@@ -146,40 +156,35 @@ llm-cost-tracker/
    http://localhost:3000
    ```
 
+## Configuration des Workspaces OpenAI
+
+Pour chaque workspace OpenAI que vous souhaitez suivre :
+
+1. Aller sur https://platform.openai.com/api-keys
+2. Créer une clé API avec les permissions **Admin** (pour accéder aux données d'usage)
+3. Ajouter la clé dans `.env.local` avec le pattern : `OPENAI_API_KEY_<WORKSPACE_NAME>`
+
+Exemple pour 2 workspaces :
+```env
+OPENAI_API_KEY_PRODUCTION=sk-admin-xxx...
+OPENAI_API_KEY_DEVELOPMENT=sk-admin-xxx...
+```
+
 ## Déploiement sur Vercel
 
-### Étapes
+1. **Pousser le code sur GitHub**
 
-1. **Initialiser Git (si pas déjà fait):**
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   ```
-
-2. **Créer un repo GitHub:**
-   - Créer un nouveau repository sur GitHub
-   - Suivre les instructions pour pusher le code
-
-3. **Connecter à Vercel:**
+2. **Connecter à Vercel:**
    - Aller sur [vercel.com](https://vercel.com)
    - Importer le repository GitHub
-   - Vercel détecte automatiquement Next.js
 
-4. **Configurer les variables d'environnement:**
+3. **Configurer les variables d'environnement:**
    - Dans Vercel: Project Settings → Environment Variables
-   - Ajouter les clés API pour OpenAI:
-     - `OPENAI_API_KEY_EDUGAMI`
-     - `OPENAI_API_KEY_MEMOWAYS`
-     - `OPENAI_API_KEY_STORYGAMI`
-   - (Optionnel) Ajouter les clés pour d'autres services:
-     - `ANTHROPIC_API_KEY`
-     - `MISTRAL_API_KEY`
-   - Marquer toutes les clés comme "Secret"
+   - Ajouter toutes les clés API
+   - Marquer comme "Secret"
 
-5. **Déployer:**
+4. **Déployer:**
    - Push sur `main` déclenche un déploiement automatique
-   - L'URL de production est fournie par Vercel
 
 ## Sécurité
 
@@ -192,92 +197,27 @@ llm-cost-tracker/
 ## API Endpoints
 
 ### GET /api/providers
+Liste des providers LLM disponibles.
 
-Récupère la liste des providers LLM disponibles.
+### GET /api/workspaces?provider=openai
+Liste des workspaces pour un provider.
 
-**Response:**
-```json
-{
-  "providers": [
-    {
-      "id": "openai",
-      "name": "OpenAI",
-      "supportsWorkspaces": true
-    }
-  ]
-}
-```
-
-### GET /api/workspaces
-
-Récupère la liste des workspaces pour un provider (si supporté).
-
-**Query params:**
-- `provider`: ID du provider (ex: `openai`)
-
-**Response:**
-```json
-{
-  "workspaces": [
-    { "id": "edugami", "name": "Edugami" },
-    { "id": "memoways", "name": "Memoways" },
-    { "id": "storygami", "name": "Storygami" }
-  ]
-}
-```
-
-### GET /api/projects
-
-Récupère la liste des projets.
-
-**Query params:**
-- `provider`: ID du provider
-- `workspace`: ID du workspace (optionnel, requis si provider supporte workspaces)
-
-**Response:**
-```json
-{
-  "projects": [
-    { "id": "proj_123", "name": "Project A" },
-    { "id": "proj_456", "name": "Project B" }
-  ]
-}
-```
+### GET /api/projects?provider=openai&workspace=xxx
+Liste des projets pour un workspace.
 
 ### GET /api/costs
-
 Récupère les coûts pour un projet et une période.
 
 **Query params:**
 - `provider`: ID du provider
-- `workspace`: ID du workspace (optionnel)
-- `project_id`: ID du projet
+- `workspace`: ID du workspace
+- `project_id`: ID du projet (optionnel pour le total workspace)
 - `start_date`: Date début (ISO 8601)
 - `end_date`: Date fin (ISO 8601)
 
-**Response:**
-```json
-{
-  "total_cost_usd": 53.68,
-  "last_updated": "2025-12-22T10:30:00Z",
-  "breakdown": [
-    {
-      "model": "gpt-4-turbo",
-      "cost_usd": 45.23,
-      "requests": 150
-    },
-    {
-      "model": "gpt-3.5-turbo",
-      "cost_usd": 8.45,
-      "requests": 890
-    }
-  ]
-}
-```
-
 ## Architecture Provider
 
-L'application utilise un pattern Provider pour supporter différents services LLM. Chaque provider implémente l'interface `ILLMProvider`:
+L'application utilise un pattern Provider pour supporter différents services LLM :
 
 ```typescript
 interface ILLMProvider {
@@ -294,21 +234,16 @@ interface ILLMProvider {
 
 1. Créer un nouveau fichier dans `src/lib/providers/`
 2. Implémenter l'interface `ILLMProvider`
-3. Ajouter le provider dans la factory (`src/lib/providers/factory.ts`)
+3. Enregistrer le provider dans `factory.ts`
 4. Ajouter les variables d'environnement nécessaires
-
-Voir la [documentation de design](docs/plans/2025-12-22-openai-cost-tracker-design.md) pour plus de détails.
 
 ## Cache
 
 - **Durée:** 5 minutes par défaut
 - **Clé:** `${provider}_${workspace}_${project}_${dateRange}`
 - **Invalidation:** Bouton refresh manuel dans l'UI
-- **Stockage:** En mémoire (Map côté serveur)
 
-## Développement
-
-### Scripts disponibles
+## Scripts disponibles
 
 ```bash
 npm run dev          # Serveur de développement
@@ -317,36 +252,22 @@ npm run start        # Serveur production
 npm run lint         # Linter
 ```
 
-### Technologies
-
-- **Next.js:** Framework React avec SSR/SSG
-- **TypeScript:** Typage statique
-- **Tailwind CSS:** Utility-first CSS
-- **React:** Library UI
-
-## Support
-
-Pour toute question ou problème, consulter:
-- [Documentation du design](docs/plans/2025-12-22-openai-cost-tracker-design.md)
-- [Changelog](CHANGELOG.md)
-- Documentation des APIs:
-  - [OpenAI API](https://platform.openai.com/docs/api-reference)
-  - [Anthropic API](https://docs.anthropic.com/en/api)
-  - [Mistral API](https://docs.mistral.ai/)
-
 ## Roadmap
 
 - [x] Architecture multi-provider extensible
-- [x] Support OpenAI (3 workspaces)
-- [x] Implémentation complète OpenAI avec pagination
+- [x] Support OpenAI avec pagination complète
 - [x] Workspace Total (tous projets combinés)
 - [x] Model-level breakdown avec pricing
-- [x] Support Anthropic (workspaces + API keys as projects)
+- [x] Support Anthropic (workspaces dynamiques)
 - [ ] Support Mistral
 - [ ] Export des données (CSV, PDF)
 - [ ] Graphiques et visualisations avancées
 - [ ] Alertes de coûts
 
+## Auteur
+
+Développé par **Ulrich Fischer** - Décembre 2024
+
 ## License
 
-Privé - Usage interne uniquement
+MIT
