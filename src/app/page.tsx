@@ -273,10 +273,56 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Workspace Total Section */}
+        {/* Project-Specific Results Section */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+            <p className="text-red-800">
+              <strong>Error:</strong> {error}
+            </p>
+          </div>
+        )}
+
+        {loading && (
+          <div className="text-center py-12">
+            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+            <p className="mt-4 text-gray-600">Loading cost data...</p>
+          </div>
+        )}
+
+        {!loading && costData && (
+          <div className="space-y-6">
+            {/* Total Cost Display */}
+            <CostDisplay
+              totalCost={costData.total_cost_usd}
+              lastUpdated={costData.last_updated}
+            />
+
+            {/* Model Breakdown Table */}
+            <ModelBreakdown breakdown={costData.breakdown} />
+          </div>
+        )}
+
+        {!loading && !costData && canShowResults && (
+          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+            <p className="text-gray-500">
+              Click &quot;Refresh Data&quot; to load cost information
+            </p>
+          </div>
+        )}
+
+        {/* Workspace Total Section - At Bottom */}
         {supportsWorkspaces && workspaceId && (
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg shadow-lg p-6 mb-8 text-white">
-            <h2 className="text-2xl font-bold mb-4">📊 Workspace Total (All Projects)</h2>
+          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg shadow-lg p-6 mt-8 text-white">
+            <h2 className="text-2xl font-bold mb-4">
+              📊 Workspace Total {providerId === 'anthropic' ? '(All API Keys)' : '(All Projects)'}
+            </h2>
+            {/* Provider-specific explanation */}
+            <p className="text-sm text-white/70 mb-4">
+              {providerId === 'anthropic' 
+                ? 'Anthropic: Costs aggregated for the entire workspace (API keys are listed as "Projects" in this app)'
+                : 'OpenAI: Costs aggregated across all projects in this workspace'
+              }
+            </p>
             
             {/* Quick Select Buttons */}
             <div className="flex flex-wrap gap-3 mb-4">
@@ -374,7 +420,10 @@ export default function Home() {
                     ${workspaceTotalCostData.total_cost_usd.toFixed(2)}
                   </div>
                   <div className="text-sm text-white/70 mt-1">
-                    Total spend across all projects
+                    {providerId === 'anthropic' 
+                      ? 'Total spend for this workspace (all API keys)'
+                      : 'Total spend across all projects'
+                    }
                   </div>
                 </div>
                 
@@ -397,43 +446,6 @@ export default function Home() {
                 )}
               </div>
             )}
-          </div>
-        )}
-
-        {/* Project-Specific Results Section */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-            <p className="text-red-800">
-              <strong>Error:</strong> {error}
-            </p>
-          </div>
-        )}
-
-        {loading && (
-          <div className="text-center py-12">
-            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-            <p className="mt-4 text-gray-600">Loading cost data...</p>
-          </div>
-        )}
-
-        {!loading && costData && (
-          <div className="space-y-6">
-            {/* Total Cost Display */}
-            <CostDisplay
-              totalCost={costData.total_cost_usd}
-              lastUpdated={costData.last_updated}
-            />
-
-            {/* Model Breakdown Table */}
-            <ModelBreakdown breakdown={costData.breakdown} />
-          </div>
-        )}
-
-        {!loading && !costData && canShowResults && (
-          <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
-            <p className="text-gray-500">
-              Click &quot;Refresh Data&quot; to load cost information
-            </p>
           </div>
         )}
       </div>

@@ -8,13 +8,14 @@
 
 import { ILLMProvider } from './interface';
 import { OpenAIProvider } from './openai';
+import { AnthropicProvider } from './anthropic';
 import { ProviderInfo } from '../types';
 
 // Registry of available providers
 const providerRegistry = new Map<string, () => ILLMProvider>([
   ['openai', () => new OpenAIProvider()],
+  ['anthropic', () => new AnthropicProvider()],
   // Future providers can be added here:
-  // ['anthropic', () => new AnthropicProvider()],
   // ['mistral', () => new MistralProvider()],
 ]);
 

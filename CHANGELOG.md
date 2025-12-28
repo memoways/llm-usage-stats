@@ -7,6 +7,29 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+### Ajout Anthropic Provider - 2025-12-28
+
+#### Ajouté
+- **Support Anthropic comme LLM Provider:**
+  - Utilisation d'une **seule Admin API key** pour accéder à tous les workspaces
+  - Récupération dynamique des workspaces via l'API Admin Anthropic
+  - Récupération dynamique des API keys par workspace (affichées comme "Projects")
+  - Pricing pour tous les modèles Claude (3.5 Sonnet, 3.5 Haiku, 3 Opus, etc.)
+
+- **Distinction importante entre providers:**
+  - **OpenAI:** Workspace → Projects → API Keys (projets = unité de facturation)
+  - **Anthropic:** Workspace → API Keys (workspace = unité de facturation, pas de concept de projet)
+  - Le bloc "Workspace Total" calcule différemment selon le provider
+
+- **Mise à jour du bloc Workspace Total:**
+  - Affiche "(All Projects)" pour OpenAI
+  - Affiche "(All API Keys)" pour Anthropic
+  - Message explicatif adapté au provider sélectionné
+
+#### Documentation
+- README mis à jour avec la distinction entre les structures OpenAI et Anthropic
+- Variables d'environnement: `ANTHROPIC_ADMIN_KEY` (une seule clé pour tout)
+
 ### Améliorations Majeures - 2025-12-22
 
 #### Ajouté
@@ -159,9 +182,10 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 - [ ] Vérification finale sur l'URL de production
 
 ### [Phase 5] - Providers Additionnels (Future)
-- [ ] Implémentation `AnthropicProvider`
-  - [ ] Intégration Console API Anthropic
-  - [ ] Support workspaces Anthropic
+- [x] Implémentation `AnthropicProvider`
+  - [x] Intégration Admin API Anthropic
+  - [x] Support workspaces dynamiques
+  - [x] API keys comme "Projects" dans l'interface
 - [ ] Implémentation `MistralProvider`
   - [ ] Intégration Platform API Mistral
 - [ ] Tests avec les nouveaux providers

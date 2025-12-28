@@ -18,11 +18,35 @@ Application web multi-services pour suivre et analyser les coûts de différents
 
 ### Actuellement Implémentés
 - ✅ **OpenAI** - 3 workspaces séparés (Edugami, Memoways, Storygami)
+- ✅ **Anthropic** - Multiple workspaces with API keys as "projects"
 
 ### À Venir
-- ⏳ **Anthropic** - Console API
 - ⏳ **Mistral** - Platform API
 - ⏳ **Autres services LLM**
+
+## ⚠️ Important: Provider Structure Differences
+
+### OpenAI
+```
+Organization
+└── Workspace (e.g., Edugami, Memoways, Storygami)
+    └── Projects (e.g., "My App", "Internal Tools")
+        └── API Keys (multiple per project)
+```
+- **Projects** are the billing unit
+- **Workspace Total** = sum of costs across all **projects**
+
+### Anthropic
+```
+Organization
+└── Workspaces (e.g., Default, Memoways projects, Claude Code)
+    └── API Keys (listed as "Projects" in this app)
+```
+- **Workspaces** are the billing unit (no projects concept)
+- **API Keys** are displayed in the "Project" dropdown for per-key cost tracking
+- **Workspace Total** = total cost for the **entire workspace**
+
+This distinction affects how the "Workspace Total" calculation works for each provider.
 
 ## Stack Technique
 
@@ -96,13 +120,17 @@ llm-cost-tracker/
 
    Éditer `.env.local` et ajouter vos clés API:
    ```env
-   # OpenAI (3 workspaces séparés)
+   # OpenAI (3 workspaces séparés - Admin API keys with usage permissions)
    OPENAI_API_KEY_EDUGAMI=sk-proj-your-key-here
    OPENAI_API_KEY_MEMOWAYS=sk-proj-your-key-here
    OPENAI_API_KEY_STORYGAMI=sk-proj-your-key-here
 
+   # Anthropic (Single Admin API key for all workspaces)
+   # Create Admin API key at: https://console.anthropic.com/settings/admin-keys
+   # This key accesses ALL workspaces dynamically - no per-workspace config needed!
+   ANTHROPIC_ADMIN_KEY=sk-ant-admin-your-key-here
+
    # Autres services (optionnel pour l'instant)
-   # ANTHROPIC_API_KEY=sk-ant-your-key-here
    # MISTRAL_API_KEY=your-key-here
    ```
 
@@ -311,7 +339,7 @@ Pour toute question ou problème, consulter:
 - [x] Implémentation complète OpenAI avec pagination
 - [x] Workspace Total (tous projets combinés)
 - [x] Model-level breakdown avec pricing
-- [ ] Support Anthropic
+- [x] Support Anthropic (workspaces + API keys as projects)
 - [ ] Support Mistral
 - [ ] Export des données (CSV, PDF)
 - [ ] Graphiques et visualisations avancées
