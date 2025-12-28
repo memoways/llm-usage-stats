@@ -46,6 +46,8 @@ Organization
 - **API Keys** are displayed in the "Project" dropdown for per-key cost tracking
 - **Workspace Total** = total cost for the **entire workspace**
 
+⚠️ **LIMITATION (as of December 2024):** Anthropic does NOT expose usage/billing data via their API. The Admin API only provides workspace, API keys, members, and invites management. **Usage data must be checked manually** at: https://console.anthropic.com/settings/billing
+
 This distinction affects how the "Workspace Total" calculation works for each provider.
 
 ## Stack Technique

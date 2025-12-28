@@ -21,6 +21,12 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
   - **Anthropic:** Workspace → API Keys (workspace = unité de facturation, pas de concept de projet)
   - Le bloc "Workspace Total" calcule différemment selon le provider
 
+- **Limitation Anthropic documentée:**
+  - Anthropic ne fournit PAS de données d'usage/facturation via leur API
+  - L'Admin API permet uniquement: workspaces, API keys, members, invites
+  - Message clair affiché dans l'interface avec lien vers la console Anthropic
+  - L'utilisateur doit vérifier manuellement: https://console.anthropic.com/settings/billing
+
 - **Mise à jour du bloc Workspace Total:**
   - Affiche "(All Projects)" pour OpenAI
   - Affiche "(All API Keys)" pour Anthropic

@@ -290,13 +290,17 @@ export class AnthropicProvider implements ILLMProvider {
       }
 
       // If no usage endpoint worked, return a helpful message
+      // NOTE: As of December 2024, Anthropic does NOT expose usage/billing data via their API.
+      // The Admin API only provides: workspaces, api_keys, members, invites management.
+      // Usage data must be checked manually in the Anthropic Console: https://console.anthropic.com/settings/billing
       if (!usageEndpointFound || !usageData) {
-        console.warn('[Anthropic] Usage API not available - Anthropic may not expose usage data via API yet');
+        console.warn('[Anthropic] Usage API not available - Anthropic does NOT expose usage data via API');
+        console.warn('[Anthropic] Check usage manually at: https://console.anthropic.com/settings/billing');
         return {
-          total_cost_usd: 0,
+          total_cost_usd: -1, // Use -1 to indicate "not available" (different from 0)
           last_updated: new Date().toISOString(),
           breakdown: [{
-            model: 'Usage data not available via API',
+            model: '⚠️ Usage API not available',
             cost_usd: 0,
             requests: 0,
           }],

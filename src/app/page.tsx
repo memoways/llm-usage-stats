@@ -295,6 +295,7 @@ export default function Home() {
             <CostDisplay
               totalCost={costData.total_cost_usd}
               lastUpdated={costData.last_updated}
+              provider={providerId}
             />
 
             {/* Model Breakdown Table */}
@@ -415,34 +416,62 @@ export default function Home() {
             {/* Workspace Total Result */}
             {!workspaceTotalLoading && workspaceTotalCostData && (
               <div className="space-y-4">
-                <div className="bg-white/10 rounded-lg p-4">
-                  <div className="text-4xl font-bold">
-                    ${workspaceTotalCostData.total_cost_usd.toFixed(2)}
-                  </div>
-                  <div className="text-sm text-white/70 mt-1">
-                    {providerId === 'anthropic' 
-                      ? 'Total spend for this workspace (all API keys)'
-                      : 'Total spend across all projects'
-                    }
-                  </div>
-                </div>
-                
-                {/* Model Breakdown for Workspace */}
-                {workspaceTotalCostData.breakdown && workspaceTotalCostData.breakdown.length > 0 && (
-                  <div className="bg-white/10 rounded-lg p-4">
-                    <h3 className="font-semibold mb-3">Model Breakdown</h3>
-                    <div className="space-y-2">
-                      {workspaceTotalCostData.breakdown.map((item, index) => (
-                        <div key={index} className="flex justify-between items-center text-sm">
-                          <span className="text-white/90">{item.model}</span>
-                          <div className="text-right">
-                            <span className="font-medium">${item.cost_usd.toFixed(2)}</span>
-                            <span className="text-white/60 ml-2">({item.requests.toLocaleString()} requests)</span>
-                          </div>
-                        </div>
-                      ))}
+                {/* Check if usage is not available (indicated by -1) */}
+                {workspaceTotalCostData.total_cost_usd < 0 ? (
+                  <div className="bg-amber-500/20 border border-amber-300/50 rounded-lg p-4">
+                    <div className="text-xl font-semibold">
+                      ⚠️ Usage Data Not Available via API
+                    </div>
+                    <div className="text-sm text-white/90 mt-2">
+                      {providerId === 'anthropic' && (
+                        <>
+                          Anthropic does not expose usage/billing data via their API.
+                          <br />
+                          Check your usage manually at:{' '}
+                          <a 
+                            href="https://console.anthropic.com/settings/billing" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="underline font-medium hover:text-white"
+                          >
+                            console.anthropic.com/settings/billing
+                          </a>
+                        </>
+                      )}
                     </div>
                   </div>
+                ) : (
+                  <>
+                    <div className="bg-white/10 rounded-lg p-4">
+                      <div className="text-4xl font-bold">
+                        ${workspaceTotalCostData.total_cost_usd.toFixed(2)}
+                      </div>
+                      <div className="text-sm text-white/70 mt-1">
+                        {providerId === 'anthropic' 
+                          ? 'Total spend for this workspace (all API keys)'
+                          : 'Total spend across all projects'
+                        }
+                      </div>
+                    </div>
+                    
+                    {/* Model Breakdown for Workspace */}
+                    {workspaceTotalCostData.breakdown && workspaceTotalCostData.breakdown.length > 0 && (
+                      <div className="bg-white/10 rounded-lg p-4">
+                        <h3 className="font-semibold mb-3">Model Breakdown</h3>
+                        <div className="space-y-2">
+                          {workspaceTotalCostData.breakdown.map((item, index) => (
+                            <div key={index} className="flex justify-between items-center text-sm">
+                              <span className="text-white/90">{item.model}</span>
+                              <div className="text-right">
+                                <span className="font-medium">${item.cost_usd.toFixed(2)}</span>
+                                <span className="text-white/60 ml-2">({item.requests.toLocaleString()} requests)</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
