@@ -30,9 +30,11 @@ Application web multi-services pour suivre et analyser les coûts de différents
 
 ## Services Supportés
 
-### Actuellement Implémentés
-- ✅ **OpenAI** - Support multi-workspaces avec projets
-- ✅ **Anthropic** - Support multi-workspaces avec API keys
+### Fonctionnel
+- ✅ **OpenAI** - Support multi-workspaces avec projets, données d'usage complètes
+
+### Implémenté mais en attente
+- ⚠️ **Anthropic** - Provider implémenté (workspaces, API keys), mais **l'API Anthropic ne fournit pas les données d'usage/coûts** (décembre 2024). En attente qu'Anthropic ouvre leur API. Les workspaces et API keys sont listés, mais les coûts affichent "non disponible".
 
 ### À Venir
 - ⏳ **Mistral** - Platform API
@@ -59,9 +61,20 @@ Organization
 ```
 - **Workspaces** = unité de facturation (pas de concept de projet)
 - Les **API Keys** sont listées dans le dropdown "Project"
-- **Workspace Total** = coût total pour le workspace entier
 
-⚠️ **LIMITATION (décembre 2024):** Anthropic ne fournit PAS de données d'usage/facturation via leur API. L'Admin API permet uniquement la gestion des workspaces, API keys, membres et invitations. **Les données d'usage doivent être consultées manuellement** sur : https://console.anthropic.com/settings/billing
+⚠️ **LIMITATION MAJEURE (décembre 2024):**  
+Anthropic **ne fournit PAS de données d'usage/facturation via leur API**. 
+
+L'Admin API permet uniquement :
+- ✅ Lister les workspaces
+- ✅ Lister les API keys
+- ✅ Gérer les membres et invitations
+- ❌ **Pas d'accès aux données d'usage**
+- ❌ **Pas d'accès aux coûts**
+
+**Conséquence:** Le provider Anthropic est implémenté mais affiche "Usage non disponible". Les données doivent être consultées manuellement sur : https://console.anthropic.com/settings/billing
+
+Nous attendons qu'Anthropic ouvre leur API pour ajouter cette fonctionnalité.
 
 ## Stack Technique
 
@@ -258,7 +271,7 @@ npm run lint         # Linter
 - [x] Support OpenAI avec pagination complète
 - [x] Workspace Total (tous projets combinés)
 - [x] Model-level breakdown avec pricing
-- [x] Support Anthropic (workspaces dynamiques)
+- [x] Support Anthropic (workspaces dynamiques) - ⚠️ En attente API usage Anthropic
 - [ ] Support Mistral
 - [ ] Export des données (CSV, PDF)
 - [ ] Graphiques et visualisations avancées
