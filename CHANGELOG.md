@@ -7,6 +7,27 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+### Ajout Deepgram Provider - 2026-01-02
+
+#### Ajouté
+- **Support Deepgram comme provider Speech-to-Text:**
+  - Nouveau provider pour le service Deepgram (STT)
+  - Affichage de l'usage en **heures/minutes audio** transcrites
+  - Support multi-projets avec liste des API keys
+  - Solde crédit affiché (ex: "Credit Balance: $199.99")
+  - Coût estimé basé sur le pricing Nova-2 (~$0.0043/min)
+
+- **Endpoints API Deepgram utilisés:**
+  - `GET /v1/projects` - Liste des projets
+  - `GET /v1/projects/{id}/keys` - API keys par projet
+  - `GET /v1/projects/{id}/usage?start=YYYY-MM-DD&end=YYYY-MM-DD` - Usage par période
+  - `GET /v1/projects/{id}/balances` - Solde crédit
+
+- **Affichage adapté:**
+  - "Speech-to-Text (1min)" avec durée formatée (s/min/h)
+  - Nombre de requêtes
+  - Crédit restant sur le compte
+
 ### Ajout ElevenLabs Provider - 2026-01-02
 
 #### Ajouté
@@ -142,6 +163,7 @@ Cette application a été créée pour pallier les limitations de la console Ope
 - [x] Model-level breakdown avec pricing
 - [x] Support Anthropic (workspaces dynamiques) - ⚠️ En attente API usage
 - [x] Support ElevenLabs (caractères / quota mensuel)
+- [x] Support Deepgram (audio / crédit restant)
 
 ### À Venir
 - [ ] Support Mistral

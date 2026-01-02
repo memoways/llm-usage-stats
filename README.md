@@ -33,6 +33,7 @@ Application web multi-services pour suivre et analyser les coûts de différents
 ### Fonctionnel
 - ✅ **OpenAI** - Support multi-workspaces avec projets, données d'usage complètes
 - ✅ **ElevenLabs** - Usage de caractères et quota mensuel (text-to-speech)
+- ✅ **Deepgram** - Usage audio (heures/minutes) et crédit restant (speech-to-text)
 
 ### Implémenté mais en attente
 - ⚠️ **Anthropic** - Provider implémenté (workspaces, API keys), mais **l'API Anthropic ne fournit pas les données d'usage/coûts** (décembre 2024). En attente qu'Anthropic ouvre leur API. Les workspaces et API keys sont listés, mais les coûts affichent "non disponible".
@@ -88,6 +89,17 @@ Account
 - **Coût estimé** basé sur le tarif du plan (starter: ~$0.30/1000 chars)
 - Affiche : caractères utilisés / limite mensuelle (%)
 
+### Deepgram
+```
+Account
+└── Projects
+    └── API Keys (affichées comme "Projects" dans cette app)
+```
+- **Facturation par durée audio** (heures/minutes transcrites)
+- L'API fournit l'usage par période et le solde crédit
+- **Coût estimé** basé sur le pricing Nova-2 (~$0.0043/min)
+- Affiche : durée audio, nombre de requêtes, crédit restant
+
 ## Stack Technique
 
 - **Framework:** Next.js 14+ (App Router)
@@ -122,6 +134,7 @@ llm-cost-tracker/
 │   │   │   ├── openai.ts      # OpenAIProvider
 │   │   │   ├── anthropic.ts   # AnthropicProvider
 │   │   │   ├── elevenlabs.ts  # ElevenLabsProvider
+│   │   │   ├── deepgram.ts    # DeepgramProvider
 │   │   │   └── factory.ts     # Provider factory
 │   │   └── types.ts           # Types TypeScript communs
 │   └── utils/                  # Utilitaires
@@ -171,6 +184,10 @@ llm-cost-tracker/
    # ElevenLabs - API key pour l'usage text-to-speech
    # Créer une clé sur: https://elevenlabs.io/app/settings/api-keys
    ELEVENLABS_API_KEY=sk_your-key-here
+
+   # Deepgram - API key pour l'usage speech-to-text
+   # Créer une clé avec scope "admin" sur: https://console.deepgram.com
+   DEEPGRAM_API_KEY=your-key-here
 
    # Autres services (optionnel)
    # MISTRAL_API_KEY=your-key-here
@@ -290,6 +307,7 @@ npm run lint         # Linter
 - [x] Model-level breakdown avec pricing
 - [x] Support Anthropic (workspaces dynamiques) - ⚠️ En attente API usage Anthropic
 - [x] Support ElevenLabs (caractères / quota mensuel)
+- [x] Support Deepgram (audio / crédit restant)
 - [ ] Support Mistral
 - [ ] Export des données (CSV, PDF)
 - [ ] Graphiques et visualisations avancées
