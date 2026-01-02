@@ -32,6 +32,7 @@ Application web multi-services pour suivre et analyser les coûts de différents
 
 ### Fonctionnel
 - ✅ **OpenAI** - Support multi-workspaces avec projets, données d'usage complètes
+- ✅ **ElevenLabs** - Usage de caractères et quota mensuel (text-to-speech)
 
 ### Implémenté mais en attente
 - ⚠️ **Anthropic** - Provider implémenté (workspaces, API keys), mais **l'API Anthropic ne fournit pas les données d'usage/coûts** (décembre 2024). En attente qu'Anthropic ouvre leur API. Les workspaces et API keys sont listés, mais les coûts affichent "non disponible".
@@ -76,6 +77,17 @@ L'Admin API permet uniquement :
 
 Nous attendons qu'Anthropic ouvre leur API pour ajouter cette fonctionnalité.
 
+### ElevenLabs
+```
+Account
+└── Subscription (tier: free, starter, creator, pro, scale, etc.)
+    └── Character Usage
+```
+- **Facturation par caractères** (pas par tokens comme les LLM)
+- L'API fournit l'usage mensuel courant et le quota
+- **Coût estimé** basé sur le tarif du plan (starter: ~$0.30/1000 chars)
+- Affiche : caractères utilisés / limite mensuelle (%)
+
 ## Stack Technique
 
 - **Framework:** Next.js 14+ (App Router)
@@ -109,6 +121,7 @@ llm-cost-tracker/
 │   │   │   ├── interface.ts   # Interface ILLMProvider
 │   │   │   ├── openai.ts      # OpenAIProvider
 │   │   │   ├── anthropic.ts   # AnthropicProvider
+│   │   │   ├── elevenlabs.ts  # ElevenLabsProvider
 │   │   │   └── factory.ts     # Provider factory
 │   │   └── types.ts           # Types TypeScript communs
 │   └── utils/                  # Utilitaires
@@ -154,6 +167,10 @@ llm-cost-tracker/
    # Anthropic - Une seule Admin API key pour tous les workspaces
    # Créer une clé Admin sur: https://console.anthropic.com/settings/admin-keys
    ANTHROPIC_ADMIN_KEY=sk-ant-admin-your-key-here
+
+   # ElevenLabs - API key pour l'usage text-to-speech
+   # Créer une clé sur: https://elevenlabs.io/app/settings/api-keys
+   ELEVENLABS_API_KEY=sk_your-key-here
 
    # Autres services (optionnel)
    # MISTRAL_API_KEY=your-key-here
@@ -272,6 +289,7 @@ npm run lint         # Linter
 - [x] Workspace Total (tous projets combinés)
 - [x] Model-level breakdown avec pricing
 - [x] Support Anthropic (workspaces dynamiques) - ⚠️ En attente API usage Anthropic
+- [x] Support ElevenLabs (caractères / quota mensuel)
 - [ ] Support Mistral
 - [ ] Export des données (CSV, PDF)
 - [ ] Graphiques et visualisations avancées
