@@ -7,6 +7,29 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+### Ajout ElevenLabs Provider - 2026-01-02
+
+#### Ajouté
+- **Support ElevenLabs comme provider Text-to-Speech:**
+  - Nouveau provider pour le service ElevenLabs (TTS)
+  - Affichage de l'usage en **caractères** (différent des tokens LLM)
+  - Quota mensuel avec pourcentage d'utilisation
+  - Coût estimé basé sur le tier d'abonnement (free, starter, creator, pro, scale)
+
+- **Endpoints API ElevenLabs utilisés:**
+  - `GET /v1/user` - Informations utilisateur et abonnement
+  - `GET /v1/user/subscription` - Détails du quota et usage
+  - `GET /v1/usage/character-stats` - Stats détaillées par période (optionnel)
+
+- **Affichage adapté:**
+  - "Characters Used (starter)" avec nombre de caractères
+  - "Quota: 26,283 / 74,010 (35.5%)" pour visualiser l'usage
+  - Coût estimé basé sur le pricing du plan (~$0.30/1000 chars pour starter)
+
+- **Documentation mise à jour:**
+  - README avec section ElevenLabs et configuration
+  - Structure du projet mise à jour avec `elevenlabs.ts`
+
 ### Ajout Anthropic Provider - 2025-12-28
 
 #### Ajouté
@@ -117,7 +140,8 @@ Cette application a été créée pour pallier les limitations de la console Ope
 - [x] Support OpenAI avec pagination complète
 - [x] Workspace Total (tous projets combinés)
 - [x] Model-level breakdown avec pricing
-- [x] Support Anthropic (workspaces dynamiques)
+- [x] Support Anthropic (workspaces dynamiques) - ⚠️ En attente API usage
+- [x] Support ElevenLabs (caractères / quota mensuel)
 
 ### À Venir
 - [ ] Support Mistral
