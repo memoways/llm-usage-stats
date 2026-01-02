@@ -11,6 +11,7 @@ import { OpenAIProvider } from './openai';
 import { AnthropicProvider } from './anthropic';
 import { ElevenLabsProvider } from './elevenlabs';
 import { DeepgramProvider } from './deepgram';
+import { OpenRouterProvider } from './openrouter';
 import { ProviderInfo } from '../types';
 
 // Registry of available providers
@@ -19,6 +20,7 @@ const providerRegistry = new Map<string, () => ILLMProvider>([
   ['anthropic', () => new AnthropicProvider()],
   ['elevenlabs', () => new ElevenLabsProvider()],
   ['deepgram', () => new DeepgramProvider()],
+  ['openrouter', () => new OpenRouterProvider()],
   // Future providers can be added here:
   // ['mistral', () => new MistralProvider()],
 ]);

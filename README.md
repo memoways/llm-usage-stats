@@ -32,6 +32,7 @@ Application web multi-services pour suivre et analyser les coûts de différents
 
 ### Fonctionnel
 - ✅ **OpenAI** - Support multi-workspaces avec projets, données d'usage complètes
+- ✅ **OpenRouter** - Usage multi-modèles (GPT-4, Claude, Llama...) et crédits restants
 - ✅ **ElevenLabs** - Usage de caractères et quota mensuel (text-to-speech)
 - ✅ **Deepgram** - Usage audio (heures/minutes) et crédit restant (speech-to-text)
 
@@ -100,6 +101,17 @@ Account
 - **Coût estimé** basé sur le pricing Nova-2 (~$0.0043/min)
 - Affiche : durée audio, nombre de requêtes, crédit restant
 
+### OpenRouter
+```
+Account
+└── Credits (pay-as-you-go)
+    └── Multi-model access (GPT-4, Claude, Llama, Mistral, etc.)
+```
+- **Facturation par tokens** (comme OpenAI) via crédits prépayés
+- L'API fournit l'usage quotidien, hebdo, mensuel et total
+- Accès à **100+ modèles** via une seule API key
+- Affiche : usage par période, crédit restant / crédit total
+
 ## Stack Technique
 
 - **Framework:** Next.js 14+ (App Router)
@@ -135,6 +147,7 @@ llm-cost-tracker/
 │   │   │   ├── anthropic.ts   # AnthropicProvider
 │   │   │   ├── elevenlabs.ts  # ElevenLabsProvider
 │   │   │   ├── deepgram.ts    # DeepgramProvider
+│   │   │   ├── openrouter.ts  # OpenRouterProvider
 │   │   │   └── factory.ts     # Provider factory
 │   │   └── types.ts           # Types TypeScript communs
 │   └── utils/                  # Utilitaires
@@ -188,6 +201,10 @@ llm-cost-tracker/
    # Deepgram - API key pour l'usage speech-to-text
    # Créer une clé avec scope "admin" sur: https://console.deepgram.com
    DEEPGRAM_API_KEY=your-key-here
+
+   # OpenRouter - API key pour accès multi-modèles
+   # Créer une clé sur: https://openrouter.ai/keys
+   OPENROUTER_API_KEY=sk-or-v1-your-key-here
 
    # Autres services (optionnel)
    # MISTRAL_API_KEY=your-key-here
@@ -308,6 +325,7 @@ npm run lint         # Linter
 - [x] Support Anthropic (workspaces dynamiques) - ⚠️ En attente API usage Anthropic
 - [x] Support ElevenLabs (caractères / quota mensuel)
 - [x] Support Deepgram (audio / crédit restant)
+- [x] Support OpenRouter (multi-modèles / crédits)
 - [ ] Support Mistral
 - [ ] Export des données (CSV, PDF)
 - [ ] Graphiques et visualisations avancées

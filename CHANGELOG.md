@@ -7,6 +7,24 @@ et ce projet adhère au [Semantic Versioning](https://semver.org/lang/fr/).
 
 ## [Non publié]
 
+### Ajout OpenRouter Provider - 2026-01-02
+
+#### Ajouté
+- **Support OpenRouter comme provider multi-modèles:**
+  - Nouveau provider pour OpenRouter (accès à GPT-4, Claude, Llama, Mistral, etc.)
+  - Affichage de l'usage en **dollars** (quotidien, hebdo, mensuel, total)
+  - Solde crédit restant / crédit total
+  - Support pay-as-you-go avec crédits prépayés
+
+- **Endpoints API OpenRouter utilisés:**
+  - `GET /api/v1/auth/key` - Infos clé API et usage par période
+  - `GET /api/v1/credits` - Crédits totaux et usage total
+
+- **Affichage adapté:**
+  - "Usage (Total)" avec montant en dollars
+  - "Credit Balance: $22.49 / $24.40" pour visualiser le solde
+  - Usage quotidien/hebdo/mensuel si disponible
+
 ### Ajout Deepgram Provider - 2026-01-02
 
 #### Ajouté
@@ -164,6 +182,7 @@ Cette application a été créée pour pallier les limitations de la console Ope
 - [x] Support Anthropic (workspaces dynamiques) - ⚠️ En attente API usage
 - [x] Support ElevenLabs (caractères / quota mensuel)
 - [x] Support Deepgram (audio / crédit restant)
+- [x] Support OpenRouter (multi-modèles / crédits)
 
 ### À Venir
 - [ ] Support Mistral
