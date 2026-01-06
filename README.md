@@ -27,6 +27,9 @@ Application web multi-services pour suivre et analyser les coûts de différents
 - 🔄 **Pagination complète:** Récupération de toutes les données même pour de longues périodes
 - 🔒 **Sécurité:** Clés API stockées côté serveur uniquement (.env gitignored)
 - 🔌 **Extensible:** Architecture provider permettant d'ajouter facilement de nouveaux services
+- 📈 **Rapports mensuels automatisés:** Collecte mensuelle des données avec stockage dans Notion
+- 📧 **Notifications email:** Rapport mensuel envoyé par email (via Resend)
+- 📉 **Indicateur de variation:** Affichage du changement en % vs mois précédent
 
 ## Services Supportés
 
@@ -316,6 +319,31 @@ npm run start        # Serveur production
 npm run lint         # Linter
 ```
 
+## Rapport Mensuel Automatisé
+
+L'application supporte la collecte mensuelle automatique des usages avec :
+
+- **Stockage Notion:** Les données sont sauvegardées dans 2 bases Notion (Provider Snapshots + Monthly Summaries)
+- **Page de rapport:** `/report?token=xxx&month=2026-01` affiche le rapport agrégé avec variations
+- **Email mensuel:** Notification par email avec résumé et lien vers le rapport complet
+- **Indicateur clé:** Variation en % par rapport au mois précédent
+
+### Configuration
+
+Voir les guides de configuration dans :
+- `docs/NOTION_SETUP.md` - Configuration Notion et variables d'environnement
+- `docs/VERCEL_DEPLOYMENT.md` - Déploiement sur Vercel
+- `docs/plans/2026-01-02-etat-des-lieux-roadmap.md` - État des lieux et roadmap détaillée
+
+### Utilisation
+
+1. Ouvrir le panneau "Collecte Mensuelle" sur la page principale
+2. Entrer le token secret (COLLECT_SECRET_TOKEN)
+3. Sélectionner le mois cible
+4. Cliquer sur "Lancer la collecte"
+
+Les données sont automatiquement sauvegardées dans Notion et un email peut être envoyé.
+
 ## Roadmap
 
 - [x] Architecture multi-provider extensible
@@ -326,6 +354,10 @@ npm run lint         # Linter
 - [x] Support ElevenLabs (caractères / quota mensuel)
 - [x] Support Deepgram (audio / crédit restant)
 - [x] Support OpenRouter (multi-modèles / crédits)
+- [x] Rapports mensuels avec stockage Notion
+- [x] Notifications email (Resend)
+- [x] Page de rapport agrégé avec variations %
+- [ ] Automatisation cron (Vercel Cron / GitHub Actions)
 - [ ] Support Mistral
 - [ ] Export des données (CSV, PDF)
 - [ ] Graphiques et visualisations avancées

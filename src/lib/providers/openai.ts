@@ -194,7 +194,9 @@ export class OpenAIProvider implements ILLMProvider {
       console.log(`[OpenAI] Date range requires ${timeChunks.length} time chunk(s)`);
 
       // Helper function to fetch ALL pages for a single time chunk
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const fetchAllPagesForChunk = async (chunk: { start: number; end: number }): Promise<any[]> => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const allChunkBuckets: any[] = [];
         let nextPage: string | null = null;
         let pageCount = 0;
@@ -268,6 +270,7 @@ export class OpenAIProvider implements ILLMProvider {
 
       // Fetch chunks SEQUENTIALLY to avoid overwhelming the API and hitting timeouts
       // The API has pagination within each chunk, so parallel requests cause too many concurrent connections
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const allBuckets: any[] = [];
       
       for (let i = 0; i < timeChunks.length; i++) {

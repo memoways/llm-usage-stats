@@ -14,9 +14,9 @@ export interface Project {
 
 export interface CostParams {
   workspace?: string;
-  projectId: string;
-  startDate: string; // ISO 8601 format
-  endDate: string;   // ISO 8601 format
+  projectId?: string; // Optional: omit for workspace-wide totals
+  startDate: string;  // ISO 8601 format
+  endDate: string;    // ISO 8601 format
 }
 
 export interface ModelCost {

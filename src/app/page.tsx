@@ -13,6 +13,7 @@ import ProjectSelector from '@/components/ProjectSelector';
 import DateRangePicker from '@/components/DateRangePicker';
 import CostDisplay from '@/components/CostDisplay';
 import ModelBreakdown from '@/components/ModelBreakdown';
+import MonthlyCollectionPanel from '@/components/MonthlyCollectionPanel';
 import { CostData } from '@/lib/types';
 
 export default function Home() {
@@ -212,6 +213,9 @@ export default function Home() {
             Track and analyze costs across multiple LLM providers
           </p>
         </div>
+
+        {/* Monthly Collection Panel */}
+        <MonthlyCollectionPanel />
 
         {/* Selection Panel */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-8">

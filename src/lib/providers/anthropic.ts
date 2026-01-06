@@ -267,6 +267,7 @@ export class AnthropicProvider implements ILLMProvider {
         `/organizations/workspaces/${workspace}/usage?start_date=${startDate}&end_date=${endDate}`,
       ];
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let usageData: any = null;
       let usageEndpointFound = false;
 
