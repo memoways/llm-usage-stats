@@ -139,3 +139,5 @@ NOTION_USAGES_DB_ID=xxx      # Remplace NOTION_SUMMARIES_DB_ID
 3. Ajouter les proprietes
 4. Pour "Service" : choisir "Relation" > selectionner "Services LLM"
 5. Activer la relation bidirectionnelle
+
+### Etape 3 : Configurer les Rollups
