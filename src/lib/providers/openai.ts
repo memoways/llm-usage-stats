@@ -12,6 +12,12 @@
 
 import { ILLMProvider } from './interface';
 import { Workspace, Project, CostParams, CostData, ModelCost } from '../types';
+import {
+  isoDateFromUnixSeconds,
+  rollupSeries,
+  seriesGrainForRange,
+  singlePeriodSeries,
+} from '../cost-series';
 
 export class OpenAIProvider implements ILLMProvider {
   public readonly id = 'openai';
@@ -336,6 +342,26 @@ export class OpenAIProvider implements ILLMProvider {
       let totalInputTokens = 0;
       let totalOutputTokens = 0;
       let totalRequests = 0;
+      const daily = new Map<string, number>();
+
+      const costFor = (model: string, inputTokens: number, outputTokens: number): number => {
+        let pricing = MODEL_PRICING[model];
+        if (!pricing) {
+          const modelPrefix = Object.keys(MODEL_PRICING).find(
+            (key) =>
+              model.startsWith(key) ||
+              key.startsWith(model.split('-').slice(0, 2).join('-')),
+          );
+          pricing = modelPrefix ? MODEL_PRICING[modelPrefix] : MODEL_PRICING['default'];
+        }
+        return (inputTokens / 1_000_000) * pricing.input + (outputTokens / 1_000_000) * pricing.output;
+      };
+
+      const addDaily = (bucket: { start_time?: number }, cost: number) => {
+        const day = isoDateFromUnixSeconds(Number(bucket.start_time));
+        if (!day || cost === 0) return;
+        daily.set(day, (daily.get(day) ?? 0) + cost);
+      };
 
       // Group by model and sum tokens/requests
       const modelMap = new Map<string, { 
@@ -376,6 +402,7 @@ export class OpenAIProvider implements ILLMProvider {
             } else {
               modelMap.set(model, { inputTokens, outputTokens, requests });
             }
+            addDaily(bucket, costFor(model, inputTokens, outputTokens));
           }
         } else if (bucket.input_tokens !== undefined || bucket.output_tokens !== undefined) {
           // Direct structure - bucket IS the result
@@ -398,6 +425,7 @@ export class OpenAIProvider implements ILLMProvider {
           } else {
             modelMap.set(model, { inputTokens, outputTokens, requests });
           }
+          addDaily(bucket, costFor(model, inputTokens, outputTokens));
         } else {
           bucketsWithoutResults++;
         }
@@ -457,10 +485,24 @@ export class OpenAIProvider implements ILLMProvider {
       // Sort breakdown by cost (descending)
       breakdown.sort((a, b) => b.cost_usd - a.cost_usd);
 
+      const seriesGrain = seriesGrainForRange(startDate, endDate);
+      let series = rollupSeries(
+        [...daily.entries()].map(([date, cost_usd]) => ({ date, cost_usd })),
+        seriesGrain,
+      );
+      let seriesNote: string | undefined;
+      if (series.length === 0 && totalCost > 0) {
+        series = singlePeriodSeries(endDate, totalCost);
+        seriesNote = 'OpenAI buckets had no start_time — showing the period total only.';
+      }
+
       return {
         total_cost_usd: totalCost,
         last_updated: new Date().toISOString(),
         breakdown,
+        series,
+        seriesGrain,
+        seriesNote,
       };
     } catch (error) {
       if (error instanceof Error) {

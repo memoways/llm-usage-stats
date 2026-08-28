@@ -25,10 +25,22 @@ export interface ModelCost {
   requests: number;     // Number of requests/calls made
 }
 
+export interface CostSeriesPoint {
+  date: string; // YYYY-MM-DD (day) or YYYY-MM (month)
+  cost_usd: number;
+}
+
+export type SeriesGrain = "day" | "month";
+
 export interface CostData {
   total_cost_usd: number;
   last_updated: string;     // ISO 8601 timestamp
   breakdown: ModelCost[];
+  /** Cost over the selected filter range. Empty when the provider has no time axis. */
+  series: CostSeriesPoint[];
+  seriesGrain: SeriesGrain;
+  /** Shown when the series is a period total, not a real daily/monthly curve. */
+  seriesNote?: string;
 }
 
 export interface ProviderInfo {

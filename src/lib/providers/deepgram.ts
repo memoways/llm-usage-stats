@@ -7,6 +7,11 @@
 
 import { ILLMProvider } from './interface';
 import { Workspace, Project, CostParams, CostData, ModelCost } from '../types';
+import {
+  rollupSeries,
+  seriesGrainForRange,
+  singlePeriodSeries,
+} from '../cost-series';
 
 export class DeepgramProvider implements ILLMProvider {
   public readonly id = 'deepgram';
@@ -160,6 +165,8 @@ export class DeepgramProvider implements ILLMProvider {
       let totalCost = 0;
       let totalHours = 0;
       let totalRequests = 0;
+      const daily: { date: string; cost_usd: number }[] = [];
+      const pricePerHour = MODEL_PRICING_PER_HOUR['default'];
 
       // Deepgram response format: { results: [{ start, end, hours, requests, ... }] }
       if (usageData.results && Array.isArray(usageData.results)) {
@@ -170,10 +177,12 @@ export class DeepgramProvider implements ILLMProvider {
           
           totalHours += hours;
           totalRequests += requests;
+          const day = String(result.start || result.date || '').slice(0, 10);
+          if (/^\d{4}-\d{2}-\d{2}$/.test(day) && hours > 0) {
+            daily.push({ date: day, cost_usd: hours * pricePerHour });
+          }
         }
 
-        // Calculate cost based on Nova-2 pricing (most common)
-        const pricePerHour = MODEL_PRICING_PER_HOUR['default'];
         totalCost = totalHours * pricePerHour;
 
         if (totalHours > 0 || totalRequests > 0) {
@@ -187,7 +196,6 @@ export class DeepgramProvider implements ILLMProvider {
         // Simple format with total hours
         const hours = usageData.hours || usageData.duration || 0;
         const requests = usageData.requests || usageData.count || 0;
-        const pricePerHour = MODEL_PRICING_PER_HOUR['default'];
         const cost = hours * pricePerHour;
 
         totalCost = cost;
@@ -231,10 +239,21 @@ export class DeepgramProvider implements ILLMProvider {
         });
       }
 
+      const seriesGrain = seriesGrainForRange(startDate, endDate);
+      let series = rollupSeries(daily, seriesGrain);
+      let seriesNote: string | undefined;
+      if (series.length === 0 && totalCost > 0) {
+        series = singlePeriodSeries(endDate, totalCost);
+        seriesNote = 'Deepgram did not return dated usage rows — period total only.';
+      }
+
       return {
         total_cost_usd: totalCost,
         last_updated: new Date().toISOString(),
         breakdown,
+        series,
+        seriesGrain,
+        seriesNote,
       };
     } catch (error) {
       console.error('[Deepgram] Error fetching usage:', error);
