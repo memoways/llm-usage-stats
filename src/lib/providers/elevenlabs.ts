@@ -7,6 +7,11 @@
 
 import { ILLMProvider } from './interface';
 import { Workspace, Project, CostParams, CostData, ModelCost } from '../types';
+import {
+  rollupSeries,
+  seriesGrainForRange,
+  singlePeriodSeries,
+} from '../cost-series';
 
 export class ElevenLabsProvider implements ILLMProvider {
   public readonly id = 'elevenlabs';
@@ -173,6 +178,7 @@ export class ElevenLabsProvider implements ILLMProvider {
                 requests: 0,
               },
             ],
+            ...elevenSeries(startDate, endDate, usageData, periodCost, pricePerChar),
           };
         }
       } catch (usageError) {
@@ -184,6 +190,10 @@ export class ElevenLabsProvider implements ILLMProvider {
         total_cost_usd: estimatedCost,
         last_updated: new Date().toISOString(),
         breakdown,
+        series: singlePeriodSeries(endDate, estimatedCost),
+        seriesGrain: seriesGrainForRange(startDate, endDate),
+        seriesNote:
+          'ElevenLabs character-stats were unavailable — monthly quota total on a single bar.',
       };
     } catch (error) {
       console.error('[ElevenLabs] Error fetching costs:', error);
@@ -193,5 +203,39 @@ export class ElevenLabsProvider implements ILLMProvider {
       throw error;
     }
   }
+}
+
+function elevenSeries(
+  startDate: string,
+  endDate: string,
+  usageData: unknown[],
+  periodCost: number,
+  pricePerChar: number,
+): Pick<CostData, 'series' | 'seriesGrain' | 'seriesNote'> {
+  const seriesGrain = seriesGrainForRange(startDate, endDate);
+  const points: { date: string; cost_usd: number }[] = [];
+  for (const row of usageData) {
+    if (!row || typeof row !== 'object') continue;
+    const rec = row as Record<string, unknown>;
+    const chars = Number(rec.character_count ?? rec.characters ?? 0);
+    const dateRaw = rec.date ?? rec.start ?? rec.timestamp;
+    let date: string | null = null;
+    if (typeof dateRaw === 'string' && /^\d{4}-\d{2}-\d{2}/.test(dateRaw)) {
+      date = dateRaw.slice(0, 10);
+    } else if (typeof rec.unix === 'number') {
+      date = new Date(rec.unix * 1000).toISOString().slice(0, 10);
+    } else if (typeof rec.start_unix === 'number') {
+      date = new Date(rec.start_unix * 1000).toISOString().slice(0, 10);
+    }
+    if (date && chars > 0) points.push({ date, cost_usd: chars * pricePerChar });
+  }
+  if (points.length > 0) {
+    return { series: rollupSeries(points, seriesGrain), seriesGrain };
+  }
+  return {
+    series: singlePeriodSeries(endDate, periodCost),
+    seriesGrain,
+    seriesNote: 'ElevenLabs returned character totals without dated buckets — period total only.',
+  };
 }
 

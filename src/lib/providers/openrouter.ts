@@ -8,6 +8,7 @@
 
 import { ILLMProvider } from './interface';
 import { Workspace, Project, CostParams, CostData, ModelCost } from '../types';
+import { seriesGrainForRange, singlePeriodSeries } from '../cost-series';
 
 export class OpenRouterProvider implements ILLMProvider {
   public readonly id = 'openrouter';
@@ -174,10 +175,21 @@ export class OpenRouterProvider implements ILLMProvider {
         });
       }
 
+      const seriesGrain = seriesGrainForRange(startDate, endDate);
+      const seriesCost = daysDiff <= 1 ? usageDaily : periodUsage;
+      const series = singlePeriodSeries(endDate, seriesCost);
+      const seriesNote =
+        daysDiff <= 1
+          ? undefined
+          : 'OpenRouter does not expose a daily series for this range — period total only (usage_daily / weekly / monthly aggregates).';
+
       return {
         total_cost_usd: totalUsage,
         last_updated: new Date().toISOString(),
         breakdown,
+        series,
+        seriesGrain,
+        seriesNote,
       };
     } catch (error) {
       console.error('[OpenRouter] Error fetching usage:', error);

@@ -12,6 +12,7 @@ import WorkspaceSelector from '@/components/WorkspaceSelector';
 import ProjectSelector from '@/components/ProjectSelector';
 import DateRangePicker from '@/components/DateRangePicker';
 import CostDisplay from '@/components/CostDisplay';
+import CostChart from '@/components/CostChart';
 import ModelBreakdown from '@/components/ModelBreakdown';
 import MonthlyCollectionPanel from '@/components/MonthlyCollectionPanel';
 import { CostData } from '@/lib/types';
@@ -302,6 +303,12 @@ export default function Home() {
               provider={providerId}
             />
 
+            <CostChart
+              series={costData.series ?? []}
+              grain={costData.seriesGrain ?? 'day'}
+              note={costData.seriesNote}
+            />
+
             {/* Model Breakdown Table */}
             <ModelBreakdown breakdown={costData.breakdown} />
           </div>
@@ -458,6 +465,16 @@ export default function Home() {
                       </div>
                     </div>
                     
+                    {(workspaceTotalCostData.series?.length ?? 0) > 0 ? (
+                      <div className="bg-white rounded-lg">
+                        <CostChart
+                          series={workspaceTotalCostData.series}
+                          grain={workspaceTotalCostData.seriesGrain ?? 'day'}
+                          note={workspaceTotalCostData.seriesNote}
+                        />
+                      </div>
+                    ) : null}
+
                     {/* Model Breakdown for Workspace */}
                     {workspaceTotalCostData.breakdown && workspaceTotalCostData.breakdown.length > 0 && (
                       <div className="bg-white/10 rounded-lg p-4">

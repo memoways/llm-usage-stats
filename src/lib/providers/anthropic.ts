@@ -305,6 +305,9 @@ export class AnthropicProvider implements ILLMProvider {
             cost_usd: 0,
             requests: 0,
           }],
+          series: [],
+          seriesGrain: 'day',
+          seriesNote: 'Anthropic does not expose usage over time via API.',
         };
       }
 
@@ -380,6 +383,9 @@ export class AnthropicProvider implements ILLMProvider {
         total_cost_usd: totalCost,
         last_updated: new Date().toISOString(),
         breakdown,
+        series: [],
+        seriesGrain: 'day',
+        seriesNote: 'Anthropic usage payload has no dated buckets in this app.',
       };
     } catch (error) {
       if (error instanceof Error) {
